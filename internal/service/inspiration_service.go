@@ -22,19 +22,22 @@ type InspirationService interface {
 	ChatCompletion(request *http_dto.InspirationMessageRequest) (*http_dto.InspirationMessageResponse, error)
 	FavoriteInspiration(sessionID, inspirationID string) error
 	UnfavoriteInspiration(sessionID, inspirationID string) error
+	GetRequestProgress(sessionID string) (*model.RequestProcess, error)
 }
 
 type inspirationServiceImpl struct {
 	llmClient  *llm.DeepseekClient
 	sessionDao dao.InspirationSessionDao
 	messageDao dao.InspirationMessageDao
+	processDao dao.RequestProcessDao
 }
 
-func NewInspirationService(client *llm.DeepseekClient, sessionDao dao.InspirationSessionDao, messageDao dao.InspirationMessageDao) InspirationService {
+func NewInspirationService(client *llm.DeepseekClient, sessionDao dao.InspirationSessionDao, messageDao dao.InspirationMessageDao, processDao dao.RequestProcessDao) InspirationService {
 	return &inspirationServiceImpl{
 		llmClient:  client,
 		sessionDao: sessionDao,
 		messageDao: messageDao,
+		processDao: processDao,
 	}
 }
 
@@ -116,40 +119,88 @@ func (s *inspirationServiceImpl) markInspirationFavorite(sessionID, inspirationI
 
 // GetResponse returns a response to user message
 func (s *inspirationServiceImpl) ChatCompletion(request *http_dto.InspirationMessageRequest) (*http_dto.InspirationMessageResponse, error) {
+	ctx := context.Background()
+
+	// Get user ID from session for tracking
+	var userID string
+	if session, err := s.sessionDao.GetByID(ctx, request.SessionID); err == nil && session != nil {
+		userID = session.UserID
+	}
+
+	// Create request process tracking record
+	requestProcess := &model.RequestProcess{
+		SessionID: request.SessionID,
+		UserID:    userID,
+		Stage:     model.RequestStageDecoding,
+		StartedAt: time.Now().UTC(),
+	}
+
+	savedProcess, err := s.processDao.Create(ctx, requestProcess)
+	if err != nil {
+		return nil, fmt.Errorf("create request process: %w", err)
+	}
+	requestProcess = savedProcess
+
+	// Process the message and track progress through different stages
+	defer func() {
+		if err != nil {
+			requestProcess.Stage = model.RequestStageFailed
+			requestProcess.Error = err.Error()
+		}
+		requestProcess.CompletedAt = time.Now().UTC()
+		s.processDao.Update(ctx, requestProcess)
+	}()
+
+	// Stage: Decoding - validate and decode message
 	inspirationMsg, err := request.ToModel()
 	if err != nil {
-		return nil, fmt.Errorf("create inspiration message %w", err)
+		err = fmt.Errorf("create inspiration message %w", err)
+		return nil, err
 	}
 	if inspirationMsg.Kind == "" {
-		return nil, fmt.Errorf("empty message kind")
+		err = fmt.Errorf("empty message kind")
+		return nil, err
 	}
 	if inspirationMsg.Kind == model.MessageKindUserInput {
 		if ok, err := s.isTravelRelated(inspirationMsg.Content); err != nil {
-			return nil, fmt.Errorf("classify travel intent %w", err)
+			err = fmt.Errorf("classify travel intent %w", err)
+			return nil, err
 		} else if !ok {
-			return nil, fmt.Errorf("当前输入未识别为旅行请求,请更具体描述你的旅行意图")
+			err = fmt.Errorf("当前输入未识别为旅行请求,请更具体描述你的旅行意图")
+			return nil, err
 		}
 	}
 
-	ctx := context.Background()
 	session, err := s.sessionDao.GetByID(ctx, inspirationMsg.SessionID)
 	if err != nil {
-		return nil, fmt.Errorf("load inspiration session %w", err)
+		err = fmt.Errorf("load inspiration session %w", err)
+		return nil, err
 	}
 	session.EnsureRequirementInitialized()
 	if inspirationMsg.StartNewInspiration {
 		if session.AppendRequirement() == nil {
-			return nil, fmt.Errorf("append requirement failed")
+			err = fmt.Errorf("append requirement failed")
+			return nil, err
 		}
 		session.Status = model.SessionStatusStartOver
 	}
+
+	// Stage: Analyzing - extract and analyze requirements
+	requestProcess.Stage = model.RequestStageAnalyzing
+	if _, err = s.processDao.Update(ctx, requestProcess); err != nil {
+		err = fmt.Errorf("update process to analyzing: %w", err)
+		return nil, err
+	}
+
 	if err := s.analyzeRequirement(inspirationMsg, session); err != nil {
-		return nil, fmt.Errorf("anaylyze requirement %w", err)
+		err = fmt.Errorf("anaylyze requirement %w", err)
+		return nil, err
 	}
 
 	userMsg, err := s.messageDao.Create(ctx, inspirationMsg)
 	if err != nil {
-		return nil, fmt.Errorf("persist user inspiration message %w", err)
+		err = fmt.Errorf("persist user inspiration message %w", err)
+		return nil, err
 	}
 	session.Messages = append(session.Messages, userMsg.ID)
 
@@ -158,10 +209,18 @@ func (s *inspirationServiceImpl) ChatCompletion(request *http_dto.InspirationMes
 		response     http_dto.InspirationMessageResponse
 	)
 
+	// Stage: Generating - generate inspiration or clarify questions
+	requestProcess.Stage = model.RequestStageGenerating
+	if _, err = s.processDao.Update(ctx, requestProcess); err != nil {
+		err = fmt.Errorf("update process to generating: %w", err)
+		return nil, err
+	}
+
 	if session.IsReadyToGenerate() {
 		replyContent, err := s.generateInspiration(session)
 		if err != nil {
-			return nil, fmt.Errorf("generate inspiration %w", err)
+			err = fmt.Errorf("generate inspiration %w", err)
+			return nil, err
 		}
 		if current, ok := session.CurrentRequirement(); ok {
 			current.Output = replyContent
@@ -184,10 +243,12 @@ func (s *inspirationServiceImpl) ChatCompletion(request *http_dto.InspirationMes
 		// must have a field need to be clarified here, or it would be ready to generate
 		field, err := s.pickNextField(session)
 		if err != nil {
+			err = fmt.Errorf("pick next field: %w", err)
 			return nil, err
 		}
 		question, options, err := s.generateClarifyQuestion(field, session)
 		if err != nil {
+			err = fmt.Errorf("generate clarify question: %w", err)
 			return nil, err
 		}
 
@@ -212,13 +273,20 @@ func (s *inspirationServiceImpl) ChatCompletion(request *http_dto.InspirationMes
 
 	savedAssistant, err := s.messageDao.Create(ctx, &assistantMsg)
 	if err != nil {
-		return nil, fmt.Errorf("persist assistant inspiration message %w", err)
+		err = fmt.Errorf("persist assistant inspiration message %w", err)
+		return nil, err
 	}
 	session.Messages = append(session.Messages, savedAssistant.ID)
 
 	if _, err := s.sessionDao.Update(ctx, session); err != nil {
-		return nil, fmt.Errorf("update inspiration session %w", err)
+		err = fmt.Errorf("update inspiration session %w", err)
+		return nil, err
 	}
+
+	// Mark as completed
+	requestProcess.Stage = model.RequestStageCompleted
+	requestProcess.CompletedAt = time.Now().UTC()
+	s.processDao.Update(ctx, requestProcess)
 
 	return &response, nil
 }
@@ -467,4 +535,18 @@ func toResponseOptions(opts []model.Option) []http_dto.ResponseOption {
 		})
 	}
 	return out
+}
+
+// GetRequestProgress retrieves the current progress of a request being processed
+func (s *inspirationServiceImpl) GetRequestProgress(sessionID string) (*model.RequestProcess, error) {
+	if sessionID == "" {
+		return nil, fmt.Errorf("session id is required")
+	}
+
+	ctx := context.Background()
+	process, err := s.processDao.GetBySessionID(ctx, sessionID)
+	if err != nil {
+		return nil, fmt.Errorf("get request process: %w", err)
+	}
+	return process, nil
 }

@@ -23,6 +23,7 @@ func Setup(inspirationHandler *handler.InspirationHandler) *gin.Engine {
 	messageGroup := r.Group("/inspiration/chat")
 	{
 		messageGroup.POST("/completion", inspirationHandler.ChatCompletion)
+		messageGroup.GET("/progress", inspirationHandler.GetRequestProgress)
 	}
 
 	inspirationGroup := r.Group("/inspiration/inspiration")

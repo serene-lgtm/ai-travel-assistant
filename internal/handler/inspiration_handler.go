@@ -105,3 +105,18 @@ func (h *InspirationHandler) UnfavoriteInspiration(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"success": true})
 }
+// GetRequestProgress returns the current progress of a ChatCompletion request
+func (h *InspirationHandler) GetRequestProgress(c *gin.Context) {
+	sessionID := c.Query("session_id")
+	if sessionID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "session_id is required"})
+		return
+	}
+
+	progress, err := h.service.GetRequestProgress(sessionID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, progress)
+}
