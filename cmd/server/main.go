@@ -40,8 +40,9 @@ func main() {
 
 	sessionDao := dao.NewInspirationSessionDao(mongoClient)
 	messageDao := dao.NewInspirationMessageDao(mongoClient)
+	processDao := dao.NewRequestProcessDao(mongoClient)
 
-	inspirationService := service.NewInspirationService(client, sessionDao, messageDao)
+	inspirationService := service.NewInspirationService(client, sessionDao, messageDao, processDao)
 	inspirationHandler := handler.NewInspirationPlanHandler(inspirationService)
 
 	engine := router.Setup(inspirationHandler)

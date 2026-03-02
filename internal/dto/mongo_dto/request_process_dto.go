@@ -11,10 +11,15 @@ import (
 
 // RequestProcessDTO maps the RequestProcess model to Mongo format.
 type RequestProcessDTO struct {
-	ID        primitive.ObjectID `bson:"_id,omitempty"`
-	Stage     string             `bson:"stg"`
-	CreatedAt time.Time          `bson:"cat"`
-	UpdatedAt time.Time          `bson:"uat"`
+	ID          primitive.ObjectID `bson:"_id,omitempty"`
+	SessionID   string             `bson:"sid"`
+	UserID      string             `bson:"uid"`
+	Stage       string             `bson:"stg"`
+	StartedAt   time.Time          `bson:"sat"`
+	CompletedAt time.Time          `bson:"cat"`
+	CreatedAt   time.Time          `bson:"cat_at"`
+	UpdatedAt   time.Time          `bson:"uat"`
+	Error       string             `bson:"err,omitempty"`
 }
 
 // RequestProcessToDTO converts a model.RequestProcess to DTO form.
@@ -24,15 +29,20 @@ func RequestProcessToDTO(process *model.RequestProcess) (*RequestProcessDTO, err
 	}
 
 	processID, err := objectIDFromHex(process.ID)
-	if err != nil {
+	if err != nil && process.ID != "" {
 		return nil, fmt.Errorf("process id: %w", err)
 	}
 
 	return &RequestProcessDTO{
-		ID:        processID,
-		Stage:     string(process.Stage),
-		CreatedAt: process.CreatedAt,
-		UpdatedAt: process.UpdatedAt,
+		ID:          processID,
+		SessionID:   process.SessionID,
+		UserID:      process.UserID,
+		Stage:       string(process.Stage),
+		StartedAt:   process.StartedAt,
+		CompletedAt: process.CompletedAt,
+		CreatedAt:   process.CreatedAt,
+		UpdatedAt:   process.UpdatedAt,
+		Error:       process.Error,
 	}, nil
 }
 
@@ -43,9 +53,14 @@ func RequestProcessFromDTO(dto *RequestProcessDTO) (*model.RequestProcess, error
 	}
 
 	return &model.RequestProcess{
-		ID:        hexFromObjectID(dto.ID),
-		Stage:     model.RequestStage(dto.Stage),
-		CreatedAt: dto.CreatedAt,
-		UpdatedAt: dto.UpdatedAt,
+		ID:          hexFromObjectID(dto.ID),
+		SessionID:   dto.SessionID,
+		UserID:      dto.UserID,
+		Stage:       model.RequestStage(dto.Stage),
+		StartedAt:   dto.StartedAt,
+		CompletedAt: dto.CompletedAt,
+		CreatedAt:   dto.CreatedAt,
+		UpdatedAt:   dto.UpdatedAt,
+		Error:       dto.Error,
 	}, nil
 }
