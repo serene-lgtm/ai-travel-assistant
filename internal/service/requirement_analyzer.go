@@ -171,7 +171,7 @@ func statusClarifyField(status model.SessionStatus) model.RequirementField {
 	}
 }
 
-const requirementSatisfiedScore = 6
+const requirementSatisfiedScore = 3
 
 var requirementFieldOrder = []model.RequirementField{
 	model.RequirementFieldMood,

@@ -80,10 +80,10 @@ func (d *inspirationSessionDao) Update(ctx context.Context, session *model.Inspi
 
 	filter := bson.M{"_id": sessionDTO.ID}
 	update := bson.M{"$set": bson.M{
-		"uid":  sessionDTO.UserID,
-		"msgs": sessionDTO.Messages,
-		"rqmt": sessionDTO.Inspirations,
-		"st":   sessionDTO.Status,
+		"uid":   sessionDTO.UserID,
+		"msgs":  sessionDTO.Messages,
+		"insps": sessionDTO.Inspirations,
+		"st":    sessionDTO.Status,
 	}}
 
 	result, err := d.collection().UpdateOne(ctx, filter, update)

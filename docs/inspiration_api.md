@@ -101,7 +101,7 @@
   "user_id": "65fe6c86b1c2c1a4bf1b6d93",
   "max_token": 32000,
   "messages": ["..."],
-  "requirement": [
+  "inspirations": [
     {
       "id": "1",
       "user_id": "65fe6c86b1c2c1a4bf1b6d93",
