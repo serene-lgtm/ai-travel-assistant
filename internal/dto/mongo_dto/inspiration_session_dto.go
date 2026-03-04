@@ -15,7 +15,7 @@ type InspirationSessionDTO struct {
 	UserID       primitive.ObjectID `bson:"uid,omitempty"`
 	MaxToken     int                `bson:"mt"`
 	Messages     []string           `bson:"msgs"`
-	Inspirations []mongoInspiration `bson:"rqmt,omitempty"`
+	Inspirations []mongoInspiration `bson:"insps,omitempty"`
 	Status       string             `bson:"st"`
 	CreatedAt    time.Time          `bson:"cat"`
 }

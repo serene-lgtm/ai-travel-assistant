@@ -26,7 +26,7 @@ type InspirationSession struct {
 	UserID       string        `json:"user_id" bson:"uid"`
 	MaxToken     int           `json:"max_token" bson:"mt"`
 	Messages     []string      `json:"messages" bson:"msgs"` // ordered message IDs
-	Inspirations []Inspiration `json:"requirement" bson:"rqmt"`
+	Inspirations []Inspiration `json:"inspirations" bson:"insps"`
 	Status       SessionStatus `json:"status" bson:"st"`
 	CreatedAt    time.Time     `json:"created_at" bson:"cat"`
 }
