@@ -326,23 +326,7 @@ func (s *inspirationServiceImpl) generateInspiration(session *model.InspirationS
 	scene := getContent(model.RequirementFieldScene)
 	focus := getContent(model.RequirementFieldFocus)
 
-	prompt := fmt.Sprintf(`你是一位文学旅行灵感策划师,请根据以下需求写出一段200-400字的旅行灵感描述,语气兼具诗意与可执行性。
-
-[情感基调]
-%s
-
-[旅行场景]
-%s
-
-[核心关注点/行动]
-%s
-
-要求:
-1. 以中文输出,分为1-2段即可。
-2. 每段开头像“第1幕”“第2幕”或其他具有仪式感的小标题。
-3. 内容中要体现可执行的场景细节(季节/时间/地点/动作),并与情绪保持一致。
-4. 不要重复提示内容,而是进行创作。
-`, mood, scene, focus)
+	prompt := fmt.Sprintf(genInspirationPrompt, mood, scene, focus)
 
 	resp, err := s.llmClient.Call(prompt)
 	if err != nil {
