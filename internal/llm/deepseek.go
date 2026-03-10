@@ -10,8 +10,6 @@ import (
 	"net/http"
 	"strings"
 	"time"
-
-	"ai-reading-assistant/internal"
 )
 
 type Message struct {
@@ -61,7 +59,6 @@ func (dc *DeepseekClient) Call(prompt string) (string, error) {
 
 func (dc *DeepseekClient) CallStream(prompt string, onDelta func(string) error) (string, error) {
 	messages := []Message{
-		{Role: "system", Content: "你是" + internal.RoleIteraryTripPlanner},
 		{Role: "user", Content: prompt},
 	}
 	return dc.ChatStream(messages, onDelta)
