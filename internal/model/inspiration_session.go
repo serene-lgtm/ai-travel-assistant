@@ -39,7 +39,21 @@ type Inspiration struct {
 	Scene      RequirementItem `json:"scene" bson:"scene"`
 	Focus      RequirementItem `json:"focus" bson:"focus"`
 	Output     string          `json:"output" bson:"op"`
+	KeyWords   []KeyWord       `json:"keywords" bson:"kws"`
 	IsFavorite bool            `json:"is_favorite" bson:"if"`
+}
+
+type KeyWord struct {
+	Content        string          `json:"content" bson:"cnt"`
+	Start          string          `json:"start" bson:"st"` // start and end refer to the position of the keyword in the text, used for highlighting in UI
+	End            string          `json:"end" bson:"ed"`
+	WikiDefinition *WikiDefinition `json:"wiki_definition,omitempty" bson:"wiki_def,omitempty"`
+}
+
+type WikiDefinition struct {
+	Title   string `json:"title" bson:"title"`       // 关键词（如"溶洞"）
+	Summary string `json:"summary" bson:"summary"`   // 简短释义
+	FullURL string `json:"full_url" bson:"full_url"` // 完整页面跳转链接
 }
 
 // RequirementItem captures both the extracted description and its score.
