@@ -15,6 +15,7 @@ import (
 	"ai-reading-assistant/internal/mongo"
 	"ai-reading-assistant/internal/router"
 	"ai-reading-assistant/internal/service"
+	"ai-reading-assistant/internal/wikipedia"
 )
 
 func main() {
@@ -28,6 +29,8 @@ func main() {
 	if err != nil {
 		log.Fatalf("init deepseek client: %v", err)
 	}
+
+	runWikiTest()
 
 	// if err := runDeepseekChatTest(client); err != nil {
 	// 	log.Fatalf("deepseek chat test: %v", err)
@@ -89,6 +92,30 @@ func runDeepseekChatTest(client *llm.DeepseekClient) error {
 		}
 		_ = response
 	}
+}
+
+func runWikiTest() {
+	keyword := "溶洞"
+	client, err := wikipedia.NewClient(
+		wikipedia.WithLanguage("zh"),
+		wikipedia.WithUserAgent("MyGolangDemo/1.0 (your@email.com)"),
+		wikipedia.WithProxy("http://127.0.0.1:6789"),
+	)
+	if err != nil {
+		fmt.Printf("初始化 wikipedia client 失败：%v\n", err)
+		return
+	}
+
+	summary, err := client.GetSummary(context.Background(), keyword)
+	if err != nil {
+		fmt.Printf("调用 wikipedia API 失败：%v\n", err)
+		return
+	}
+
+	fmt.Println("===== 维基百科API调用结果 =====")
+	fmt.Printf("关键词：%s\n", summary.Title)
+	fmt.Printf("简短释义：%s\n", summary.Extract)
+	fmt.Printf("完整页面链接：%s\n", summary.ContentURLs.Desktop.Page)
 }
 
 // func runScoreOfTop3Test(svc service.TravelPlanService) {
