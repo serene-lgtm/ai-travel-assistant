@@ -1,6 +1,7 @@
 package service
 
 import (
+	"ai-reading-assistant/internal/agent"
 	"ai-reading-assistant/internal/config"
 	"ai-reading-assistant/internal/dao"
 	"ai-reading-assistant/internal/dto/http_dto"
@@ -26,18 +27,20 @@ type InspirationService interface {
 }
 
 type inspirationServiceImpl struct {
-	llmClient  *llm.DeepseekClient
-	sessionDao dao.InspirationSessionDao
-	messageDao dao.InspirationMessageDao
-	processDao dao.RequestProcessDao
+	llmClient   *llm.DeepseekClient
+	intentAgent agent.IntentAgent
+	sessionDao  dao.InspirationSessionDao
+	messageDao  dao.InspirationMessageDao
+	processDao  dao.RequestProcessDao
 }
 
 func NewInspirationService(client *llm.DeepseekClient, sessionDao dao.InspirationSessionDao, messageDao dao.InspirationMessageDao, processDao dao.RequestProcessDao) InspirationService {
 	return &inspirationServiceImpl{
-		llmClient:  client,
-		sessionDao: sessionDao,
-		messageDao: messageDao,
-		processDao: processDao,
+		llmClient:   client,
+		intentAgent: agent.NewIntentAgent(client),
+		sessionDao:  sessionDao,
+		messageDao:  messageDao,
+		processDao:  processDao,
 	}
 }
 
@@ -161,15 +164,6 @@ func (s *inspirationServiceImpl) ChatCompletion(request *http_dto.InspirationMes
 		err = fmt.Errorf("empty message kind")
 		return nil, err
 	}
-	if inspirationMsg.Kind == model.MessageKindUserInput {
-		if ok, err := s.isTravelRelated(inspirationMsg.Content); err != nil {
-			err = fmt.Errorf("classify travel intent %w", err)
-			return nil, err
-		} else if !ok {
-			err = fmt.Errorf("当前输入未识别为旅行请求,请更具体描述你的旅行意图")
-			return nil, err
-		}
-	}
 
 	session, err := s.sessionDao.GetByID(ctx, inspirationMsg.SessionID)
 	if err != nil {
@@ -177,6 +171,49 @@ func (s *inspirationServiceImpl) ChatCompletion(request *http_dto.InspirationMes
 		return nil, err
 	}
 	session.EnsureRequirementInitialized()
+
+	if inspirationMsg.Kind == model.MessageKindUserInput {
+		if ok, err := s.isTravelRelated(inspirationMsg.Content); err != nil {
+			err = fmt.Errorf("classify travel intent %w", err)
+			return nil, err
+		} else if !ok {
+			userMsg, err := s.messageDao.Create(ctx, inspirationMsg)
+			if err != nil {
+				err = fmt.Errorf("persist user inspiration message %w", err)
+				return nil, err
+			}
+			session.Messages = append(session.Messages, userMsg.ID)
+
+			assistantMsg := model.InspirationMessage{
+				SessionID: inspirationMsg.SessionID,
+				Role:      model.InspirationMessageRoleAssistant,
+				Kind:      model.MessageKindAssistant,
+				Content:   "当前输入未识别为旅行请求,请更具体描述你的旅行意图",
+				CreatedAt: time.Now().UTC(),
+			}
+			savedAssistant, err := s.messageDao.Create(ctx, &assistantMsg)
+			if err != nil {
+				err = fmt.Errorf("persist assistant inspiration message %w", err)
+				return nil, err
+			}
+			session.Messages = append(session.Messages, savedAssistant.ID)
+
+			if _, err := s.sessionDao.Update(ctx, session); err != nil {
+				err = fmt.Errorf("update inspiration session %w", err)
+				return nil, err
+			}
+
+			requestProcess.Stage = model.RequestStageCompleted
+			return &http_dto.InspirationMessageResponse{
+				SessionID:     request.SessionID,
+				Role:          string(model.InspirationMessageRoleAssistant),
+				Kind:          string(model.MessageKindAssistant),
+				Content:       "当前输入未识别为旅行请求,请更具体描述你的旅行意图",
+				IsInspiration: false,
+			}, nil
+		}
+	}
+
 	if inspirationMsg.StartNewInspiration {
 		if session.AppendRequirement() == nil {
 			err = fmt.Errorf("append requirement failed")
@@ -222,7 +259,8 @@ func (s *inspirationServiceImpl) ChatCompletion(request *http_dto.InspirationMes
 			err = fmt.Errorf("generate inspiration %w", err)
 			return nil, err
 		}
-		if current, ok := session.CurrentRequirement(); ok {
+		current, ok := session.CurrentRequirement()
+		if ok {
 			current.Output = replyContent
 		}
 		assistantMsg = model.InspirationMessage{
@@ -233,10 +271,12 @@ func (s *inspirationServiceImpl) ChatCompletion(request *http_dto.InspirationMes
 			CreatedAt: time.Now().UTC(),
 		}
 		response = http_dto.InspirationMessageResponse{
-			SessionID: inspirationMsg.SessionID,
-			Role:      string(model.InspirationMessageRoleAssistant),
-			Kind:      string(model.MessageKindAssistant),
-			Content:   replyContent,
+			SessionID:     inspirationMsg.SessionID,
+			Role:          string(model.InspirationMessageRoleAssistant),
+			Kind:          string(model.MessageKindAssistant),
+			Content:       replyContent,
+			IsInspiration: true,
+			Inspiration:   toResponseInspiration(current),
 		}
 		session.Status = model.SessionStatusCompleted
 	} else {
@@ -261,12 +301,13 @@ func (s *inspirationServiceImpl) ChatCompletion(request *http_dto.InspirationMes
 			CreatedAt: time.Now().UTC(),
 		}
 		response = http_dto.InspirationMessageResponse{
-			SessionID:   inspirationMsg.SessionID,
-			Role:        string(model.InspirationMessageRoleAssistant),
-			Kind:        string(model.MessageKindClarifyAsk),
-			Content:     question,
-			Options:     toResponseOptions(options),
-			TargetField: string(field),
+			SessionID:     inspirationMsg.SessionID,
+			Role:          string(model.InspirationMessageRoleAssistant),
+			Kind:          string(model.MessageKindClarifyAsk),
+			Content:       question,
+			Options:       toResponseOptions(options),
+			TargetField:   string(field),
+			IsInspiration: false,
 		}
 		session.Status = statusForField(field)
 	}
@@ -405,19 +446,18 @@ func (s *inspirationServiceImpl) isTravelRelated(content string) (bool, error) {
 	if strings.TrimSpace(content) == "" {
 		return false, fmt.Errorf("content is empty")
 	}
-	prompt := fmt.Sprintf(travelRelatedCriteria, content)
+	if s.intentAgent == nil {
+		return false, fmt.Errorf("intent agent is not initialized")
+	}
 
-	raw, err := s.llmClient.Call(prompt)
+	result, err := s.intentAgent.DetectTravelIntent(context.Background(), content)
 	if err != nil {
 		return false, err
 	}
-	var payload struct {
-		TravelRelated bool `json:"travel_related"`
+	if result == nil {
+		return false, fmt.Errorf("intent agent returned nil result")
 	}
-	if err := decodeFirstJSONObject(raw, &payload); err != nil {
-		return false, err
-	}
-	return payload.TravelRelated, nil
+	return result.TravelRelated, nil
 }
 
 var fieldLabels = map[model.RequirementField]string{
@@ -519,6 +559,46 @@ func toResponseOptions(opts []model.Option) []http_dto.ResponseOption {
 		})
 	}
 	return out
+}
+
+func toResponseInspiration(inspiration *model.Inspiration) *http_dto.InspirationPayload {
+	if inspiration == nil {
+		return nil
+	}
+
+	return &http_dto.InspirationPayload{
+		ID:         inspiration.ID,
+		Output:     inspiration.Output,
+		Keywords:   toResponseKeywords(inspiration.KeyWords),
+		IsFavorite: inspiration.IsFavorite,
+	}
+}
+
+func toResponseKeywords(items []model.KeyWord) []http_dto.KeywordPayload {
+	if len(items) == 0 {
+		return nil
+	}
+	out := make([]http_dto.KeywordPayload, 0, len(items))
+	for _, item := range items {
+		out = append(out, http_dto.KeywordPayload{
+			Content:        item.Content,
+			Start:          item.Start,
+			End:            item.End,
+			WikiDefinition: toResponseWikiDefinition(item.WikiDefinition),
+		})
+	}
+	return out
+}
+
+func toResponseWikiDefinition(item *model.WikiDefinition) *http_dto.WikiDefinitionPayload {
+	if item == nil {
+		return nil
+	}
+	return &http_dto.WikiDefinitionPayload{
+		Title:   item.Title,
+		Summary: item.Summary,
+		FullURL: item.FullURL,
+	}
 }
 
 // GetRequestProgress retrieves the current progress of a request being processed
