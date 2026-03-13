@@ -7,6 +7,8 @@ import (
 	"ai-reading-assistant/internal/dto/http_dto"
 	"ai-reading-assistant/internal/llm"
 	"ai-reading-assistant/internal/model"
+	"ai-reading-assistant/internal/orchestrator"
+	"ai-reading-assistant/internal/wikipedia"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -27,21 +29,58 @@ type InspirationService interface {
 }
 
 type inspirationServiceImpl struct {
-	llmClient   *llm.DeepseekClient
-	intentAgent agent.IntentAgent
-	sessionDao  dao.InspirationSessionDao
-	messageDao  dao.InspirationMessageDao
-	processDao  dao.RequestProcessDao
+	llmClient    *llm.DeepseekClient
+	intentAgent  agent.IntentAgent
+	sessionDao   dao.InspirationSessionDao
+	messageDao   dao.InspirationMessageDao
+	processDao   dao.RequestProcessDao
+	orchestrator orchestrator.InspirationOrchestrator
 }
 
 func NewInspirationService(client *llm.DeepseekClient, sessionDao dao.InspirationSessionDao, messageDao dao.InspirationMessageDao, processDao dao.RequestProcessDao) InspirationService {
+	intentAgent := agent.NewIntentAgent(client)
+	requirementAgent := agent.NewRequirementAnalyzerAgent(client)
+	clarificationAgent := agent.NewClarificationAgent(client)
+	inspirationAgent := agent.NewInspirationAgent(client)
+	keywordAgent := agent.NewKeywordAgent(client)
+	wikipediaAgent := newWikipediaAgentFromConfig(config.Global().Wikipedia)
 	return &inspirationServiceImpl{
 		llmClient:   client,
-		intentAgent: agent.NewIntentAgent(client),
+		intentAgent: intentAgent,
 		sessionDao:  sessionDao,
 		messageDao:  messageDao,
 		processDao:  processDao,
+		orchestrator: orchestrator.NewInspirationOrchestrator(
+			sessionDao,
+			messageDao,
+			processDao,
+			intentAgent,
+			requirementAgent,
+			clarificationAgent,
+			inspirationAgent,
+			keywordAgent,
+			wikipediaAgent,
+		),
 	}
+}
+
+func newWikipediaAgentFromConfig(cfg config.WikipediaConfig) agent.WikipediaAgent {
+	opts := make([]wikipedia.Option, 0, 3)
+	if lang := strings.TrimSpace(cfg.Language); lang != "" {
+		opts = append(opts, wikipedia.WithLanguage(lang))
+	}
+	if proxy := strings.TrimSpace(cfg.Proxy); proxy != "" {
+		opts = append(opts, wikipedia.WithProxy(proxy))
+	}
+	if userAgent := strings.TrimSpace(cfg.UserAgent); userAgent != "" {
+		opts = append(opts, wikipedia.WithUserAgent(userAgent))
+	}
+
+	client, err := wikipedia.NewClient(opts...)
+	if err != nil {
+		return nil
+	}
+	return agent.NewWikipediaAgent(client)
 }
 
 // CreateInspirationSession creates and returns a brand new session ID.
@@ -122,214 +161,10 @@ func (s *inspirationServiceImpl) markInspirationFavorite(sessionID, inspirationI
 
 // GetResponse returns a response to user message
 func (s *inspirationServiceImpl) ChatCompletion(request *http_dto.InspirationMessageRequest) (*http_dto.InspirationMessageResponse, error) {
-	ctx := context.Background()
-
-	// Get user ID from session for tracking
-	var userID string
-	if session, err := s.sessionDao.GetByID(ctx, request.SessionID); err == nil && session != nil {
-		userID = session.UserID
+	if s.orchestrator == nil {
+		return nil, fmt.Errorf("inspiration orchestrator is not initialized")
 	}
-
-	// Create request process tracking record
-	requestProcess := &model.RequestProcess{
-		SessionID: request.SessionID,
-		UserID:    userID,
-		Stage:     model.RequestStageDecoding,
-		StartedAt: time.Now().UTC(),
-	}
-
-	savedProcess, err := s.processDao.Create(ctx, requestProcess)
-	if err != nil {
-		return nil, fmt.Errorf("create request process: %w", err)
-	}
-	requestProcess = savedProcess
-
-	// Process the message and track progress through different stages
-	defer func() {
-		if err != nil {
-			requestProcess.Stage = model.RequestStageFailed
-			requestProcess.Error = err.Error()
-		}
-		requestProcess.CompletedAt = time.Now().UTC()
-		s.processDao.Update(ctx, requestProcess)
-	}()
-
-	// Stage: Decoding - validate and decode message
-	inspirationMsg, err := request.ToModel()
-	if err != nil {
-		err = fmt.Errorf("create inspiration message %w", err)
-		return nil, err
-	}
-	if inspirationMsg.Kind == "" {
-		err = fmt.Errorf("empty message kind")
-		return nil, err
-	}
-
-	session, err := s.sessionDao.GetByID(ctx, inspirationMsg.SessionID)
-	if err != nil {
-		err = fmt.Errorf("load inspiration session %w", err)
-		return nil, err
-	}
-	session.EnsureRequirementInitialized()
-
-	if inspirationMsg.Kind == model.MessageKindUserInput {
-		if ok, err := s.isTravelRelated(inspirationMsg.Content); err != nil {
-			err = fmt.Errorf("classify travel intent %w", err)
-			return nil, err
-		} else if !ok {
-			userMsg, err := s.messageDao.Create(ctx, inspirationMsg)
-			if err != nil {
-				err = fmt.Errorf("persist user inspiration message %w", err)
-				return nil, err
-			}
-			session.Messages = append(session.Messages, userMsg.ID)
-
-			assistantMsg := model.InspirationMessage{
-				SessionID: inspirationMsg.SessionID,
-				Role:      model.InspirationMessageRoleAssistant,
-				Kind:      model.MessageKindAssistant,
-				Content:   "当前输入未识别为旅行请求,请更具体描述你的旅行意图",
-				CreatedAt: time.Now().UTC(),
-			}
-			savedAssistant, err := s.messageDao.Create(ctx, &assistantMsg)
-			if err != nil {
-				err = fmt.Errorf("persist assistant inspiration message %w", err)
-				return nil, err
-			}
-			session.Messages = append(session.Messages, savedAssistant.ID)
-
-			if _, err := s.sessionDao.Update(ctx, session); err != nil {
-				err = fmt.Errorf("update inspiration session %w", err)
-				return nil, err
-			}
-
-			requestProcess.Stage = model.RequestStageCompleted
-			return &http_dto.InspirationMessageResponse{
-				SessionID:     request.SessionID,
-				Role:          string(model.InspirationMessageRoleAssistant),
-				Kind:          string(model.MessageKindAssistant),
-				Content:       "当前输入未识别为旅行请求,请更具体描述你的旅行意图",
-				IsInspiration: false,
-			}, nil
-		}
-	}
-
-	if inspirationMsg.StartNewInspiration {
-		if session.AppendRequirement() == nil {
-			err = fmt.Errorf("append requirement failed")
-			return nil, err
-		}
-		session.Status = model.SessionStatusStartOver
-	}
-
-	// Stage: Analyzing - extract and analyze requirements
-	requestProcess.Stage = model.RequestStageAnalyzing
-	if _, err = s.processDao.Update(ctx, requestProcess); err != nil {
-		err = fmt.Errorf("update process to analyzing: %w", err)
-		return nil, err
-	}
-
-	if err := s.analyzeRequirement(inspirationMsg, session); err != nil {
-		err = fmt.Errorf("anaylyze requirement %w", err)
-		return nil, err
-	}
-
-	userMsg, err := s.messageDao.Create(ctx, inspirationMsg)
-	if err != nil {
-		err = fmt.Errorf("persist user inspiration message %w", err)
-		return nil, err
-	}
-	session.Messages = append(session.Messages, userMsg.ID)
-
-	var (
-		assistantMsg model.InspirationMessage
-		response     http_dto.InspirationMessageResponse
-	)
-
-	// Stage: Generating - generate inspiration or clarify questions
-	requestProcess.Stage = model.RequestStageGenerating
-	if _, err = s.processDao.Update(ctx, requestProcess); err != nil {
-		err = fmt.Errorf("update process to generating: %w", err)
-		return nil, err
-	}
-
-	if session.IsReadyToGenerate() {
-		replyContent, err := s.generateInspiration(session)
-		if err != nil {
-			err = fmt.Errorf("generate inspiration %w", err)
-			return nil, err
-		}
-		current, ok := session.CurrentRequirement()
-		if ok {
-			current.Output = replyContent
-		}
-		assistantMsg = model.InspirationMessage{
-			SessionID: inspirationMsg.SessionID,
-			Role:      model.InspirationMessageRoleAssistant,
-			Kind:      model.MessageKindAssistant,
-			Content:   replyContent,
-			CreatedAt: time.Now().UTC(),
-		}
-		response = http_dto.InspirationMessageResponse{
-			SessionID:     inspirationMsg.SessionID,
-			Role:          string(model.InspirationMessageRoleAssistant),
-			Kind:          string(model.MessageKindAssistant),
-			Content:       replyContent,
-			IsInspiration: true,
-			Inspiration:   toResponseInspiration(current),
-		}
-		session.Status = model.SessionStatusCompleted
-	} else {
-		// must have a field need to be clarified here, or it would be ready to generate
-		field, err := s.pickNextField(session)
-		if err != nil {
-			err = fmt.Errorf("pick next field: %w", err)
-			return nil, err
-		}
-		question, options, err := s.generateClarifyQuestion(field, session)
-		if err != nil {
-			err = fmt.Errorf("generate clarify question: %w", err)
-			return nil, err
-		}
-
-		assistantMsg = model.InspirationMessage{
-			SessionID: inspirationMsg.SessionID,
-			Role:      model.InspirationMessageRoleAssistant,
-			Kind:      model.MessageKindClarifyAsk,
-			Content:   question,
-			Options:   options,
-			CreatedAt: time.Now().UTC(),
-		}
-		response = http_dto.InspirationMessageResponse{
-			SessionID:     inspirationMsg.SessionID,
-			Role:          string(model.InspirationMessageRoleAssistant),
-			Kind:          string(model.MessageKindClarifyAsk),
-			Content:       question,
-			Options:       toResponseOptions(options),
-			TargetField:   string(field),
-			IsInspiration: false,
-		}
-		session.Status = statusForField(field)
-	}
-
-	savedAssistant, err := s.messageDao.Create(ctx, &assistantMsg)
-	if err != nil {
-		err = fmt.Errorf("persist assistant inspiration message %w", err)
-		return nil, err
-	}
-	session.Messages = append(session.Messages, savedAssistant.ID)
-
-	if _, err := s.sessionDao.Update(ctx, session); err != nil {
-		err = fmt.Errorf("update inspiration session %w", err)
-		return nil, err
-	}
-
-	// Mark as completed
-	requestProcess.Stage = model.RequestStageCompleted
-	requestProcess.CompletedAt = time.Now().UTC()
-	s.processDao.Update(ctx, requestProcess)
-
-	return &response, nil
+	return s.orchestrator.HandleChatCompletion(context.Background(), request)
 }
 
 // generateInspiration composes a literary travel inspiration based on the session requirements.
