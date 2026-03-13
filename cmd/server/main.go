@@ -95,7 +95,13 @@ func runDeepseekChatTest(client *llm.DeepseekClient) error {
 }
 
 func runWikiTest() {
-	keyword := "溶洞"
+	keyword := "福贡县老姆登村"
+	// wikiCfg := config.Global().Wikipedia
+	// client, err := wikipedia.NewClient(
+	// 	wikipedia.WithLanguage(wikiCfg.Language),
+	// 	wikipedia.WithUserAgent(wikiCfg.UserAgent),
+	// 	wikipedia.WithProxy(wikiCfg.Proxy),
+	// )
 	client, err := wikipedia.NewClient(
 		wikipedia.WithLanguage("zh"),
 		wikipedia.WithUserAgent("MyGolangDemo/1.0 (your@email.com)"),

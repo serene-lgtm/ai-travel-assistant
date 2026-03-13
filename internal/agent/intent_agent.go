@@ -2,7 +2,6 @@ package agent
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -56,15 +55,6 @@ func (a *intentAgent) DetectTravelIntent(_ context.Context, content string) (*In
 		TravelRelated: payload.TravelRelated,
 		RawResponse:   strings.TrimSpace(raw),
 	}, nil
-}
-
-func decodeFirstJSONObject(raw string, dst any) error {
-	start := strings.Index(raw, "{")
-	end := strings.LastIndex(raw, "}")
-	if start == -1 || end == -1 || start > end {
-		return fmt.Errorf("response missing json object: %s", raw)
-	}
-	return json.Unmarshal([]byte(raw[start:end+1]), dst)
 }
 
 const travelRelatedPrompt = `

@@ -11,5 +11,10 @@
   },
   "session": {
     "max_message_reserved": 15
+  },
+  "wikipedia": {
+    "language": "zh",
+    "user_agent": "MyGolangDemo/1.0 (your@email.com)",
+    "proxy": "http://127.0.0.1:6789"
   }
 }

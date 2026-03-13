@@ -10,9 +10,10 @@ import (
 
 // Config stores global configuration loaded from config.json.
 type Config struct {
-	Deepseek DeepseekConfig `json:"deepseek"`
-	Mongo    MongoConfig    `json:"mongo"`
-	Session  SessionConfig  `json:"session"`
+	Deepseek  DeepseekConfig  `json:"deepseek"`
+	Mongo     MongoConfig     `json:"mongo"`
+	Session   SessionConfig   `json:"session"`
+	Wikipedia WikipediaConfig `json:"wikipedia"`
 }
 
 type DeepseekConfig struct {
@@ -29,6 +30,12 @@ type MongoConfig struct {
 
 type SessionConfig struct {
 	MaxMessageReserved int `json:"max_message_reserved"`
+}
+
+type WikipediaConfig struct {
+	Language  string `json:"language"`
+	UserAgent string `json:"user_agent"`
+	Proxy     string `json:"proxy"`
 }
 
 type TokenConfig struct {
@@ -115,6 +122,9 @@ func (cfg *Config) applyDefaults() {
 	}
 	if cfg.Mongo.Timeout <= 0 {
 		cfg.Mongo.Timeout = 10 * time.Second
+	}
+	if cfg.Wikipedia.Language == "" {
+		cfg.Wikipedia.Language = "zh"
 	}
 }
 
