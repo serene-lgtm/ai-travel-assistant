@@ -10,7 +10,7 @@ import (
 )
 
 type RequirementAnalyzerAgent interface {
-	Analyze(ctx context.Context, msg *model.InspirationMessage, session *model.InspirationSession) error
+	Analyze(ctx context.Context, msg *model.InspirationMessage, session *model.InspirationSession, targetField model.RequirementField) error
 }
 
 type requirementAnalyzerAgent struct {
@@ -21,7 +21,7 @@ func NewRequirementAnalyzerAgent(client *llm.DeepseekClient) RequirementAnalyzer
 	return &requirementAnalyzerAgent{llmClient: client}
 }
 
-func (a *requirementAnalyzerAgent) Analyze(_ context.Context, msg *model.InspirationMessage, session *model.InspirationSession) error {
+func (a *requirementAnalyzerAgent) Analyze(_ context.Context, msg *model.InspirationMessage, session *model.InspirationSession, targetField model.RequirementField) error {
 	if msg == nil {
 		return fmt.Errorf("message is nil")
 	}
@@ -36,28 +36,32 @@ func (a *requirementAnalyzerAgent) Analyze(_ context.Context, msg *model.Inspira
 		return fmt.Errorf("current requirement is nil")
 	}
 
-	targetField := statusClarifyField(session.Status)
 	clarifying := targetField != ""
 
 	if clarifying && msg.Kind == model.MessageKindUserChoice && len(msg.Options) > 0 {
-		selected := strings.TrimSpace(msg.Options[0].Content)
-		if selected == "" {
-			return fmt.Errorf("selected option content is empty")
-		}
-		item := current.Get(targetField)
-		item.SelectedOption = selected
-		if item.Score < requirementSatisfiedScore {
-			item.Score = requirementSatisfiedScore
-		}
-		current.Set(targetField, item)
-		if session.IsReadyToGenerate() {
-			session.Status = model.SessionStatusCompleted
-		} else if nextField, err := pickNextField(session); err == nil {
-			session.Status = statusForField(nextField)
-		}
-		return nil
+		return a.applyUserChoice(current, targetField, msg)
 	}
 
+	return a.analyzeFreeTextInput(current, targetField, msg)
+}
+
+func (a *requirementAnalyzerAgent) applyUserChoice(current *model.Inspiration, targetField model.RequirementField, msg *model.InspirationMessage) error {
+	selected := strings.TrimSpace(msg.Options[0].Content)
+	if selected == "" {
+		return fmt.Errorf("selected option content is empty")
+	}
+
+	// targetField points to the requirement slot the current choice should fill.
+	item := current.Get(targetField)
+	item.SelectedOption = selected
+	if item.Score < requirementSatisfiedScore {
+		item.Score = requirementSatisfiedScore
+	}
+	current.Set(targetField, item)
+	return nil
+}
+
+func (a *requirementAnalyzerAgent) analyzeFreeTextInput(current *model.Inspiration, targetField model.RequirementField, msg *model.InspirationMessage) error {
 	inputText := strings.TrimSpace(msg.Content)
 	if inputText == "" {
 		return fmt.Errorf("content is empty")
@@ -74,6 +78,7 @@ func (a *requirementAnalyzerAgent) Analyze(_ context.Context, msg *model.Inspira
 	}
 
 	for _, flow := range flows {
+		// When targetField is set, only this field needs to be clarified.
 		if targetField != "" && flow.field != targetField {
 			continue
 		}
@@ -121,63 +126,6 @@ func (a *requirementAnalyzerAgent) extractRequirementField(field model.Requireme
 		content = strings.TrimSpace(val)
 	}
 	return content, normalizeScore(payload["score"]), nil
-}
-
-const requirementSatisfiedScore = 3
-
-func statusForField(field model.RequirementField) model.SessionStatus {
-	switch field {
-	case model.RequirementFieldMood:
-		return model.SessionStatusAskingMood
-	case model.RequirementFieldScene:
-		return model.SessionStatusAskingScene
-	case model.RequirementFieldFocus:
-		return model.SessionStatusAskingFocus
-	default:
-		return model.SessionStatusAskingMood
-	}
-}
-
-func statusClarifyField(status model.SessionStatus) model.RequirementField {
-	switch status {
-	case model.SessionStatusAskingMood:
-		return model.RequirementFieldMood
-	case model.SessionStatusAskingScene:
-		return model.RequirementFieldScene
-	case model.SessionStatusAskingFocus:
-		return model.RequirementFieldFocus
-	default:
-		return ""
-	}
-}
-
-var requirementFieldOrder = []model.RequirementField{
-	model.RequirementFieldMood,
-	model.RequirementFieldScene,
-	model.RequirementFieldFocus,
-}
-
-func pickNextField(session *model.InspirationSession) (model.RequirementField, error) {
-	minScore := int(^uint(0) >> 1)
-	var selected model.RequirementField
-	for _, field := range requirementFieldOrder {
-		current, ok := session.CurrentRequirement()
-		if !ok {
-			return "", fmt.Errorf("current requirement is empty")
-		}
-		score := current.Get(field).Score
-		if score >= requirementSatisfiedScore {
-			continue
-		}
-		if score < minScore {
-			minScore = score
-			selected = field
-		}
-	}
-	if selected == "" {
-		return "", fmt.Errorf("no requirement field needs clarification")
-	}
-	return selected, nil
 }
 
 var fieldLabels = map[model.RequirementField]string{
