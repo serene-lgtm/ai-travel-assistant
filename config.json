@@ -1,6 +1,6 @@
 {
   "deepseek": {
-    "api_key": "sk-e16b7b314c754f9e8aef194ec0574ead",
+    "api_key": "偷api_key的替我挡灾",
     "model": "deepseek-chat",
     "base_url": "https://api.deepseek.com/v1/chat/completions"
   },

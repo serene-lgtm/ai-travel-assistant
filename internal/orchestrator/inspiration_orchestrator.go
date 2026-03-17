@@ -124,6 +124,8 @@ func (o *inspirationOrchestrator) HandleChatCompletion(ctx context.Context, requ
 		session.Status = model.SessionStatusStartOver
 	}
 
+	targetField := statusClarifyField(session.Status)
+
 	requestProcess.Stage = model.RequestStageAnalyzing
 	if _, err := o.processDao.Update(ctx, requestProcess); err != nil {
 		requestProcess.Stage = model.RequestStageFailed
@@ -131,11 +133,12 @@ func (o *inspirationOrchestrator) HandleChatCompletion(ctx context.Context, requ
 		return nil, fmt.Errorf("update process to analyzing: %w", err)
 	}
 
-	if err := o.requirementAgent.Analyze(ctx, inspirationMsg, session); err != nil {
+	if err := o.requirementAgent.Analyze(ctx, inspirationMsg, session, targetField); err != nil {
 		requestProcess.Stage = model.RequestStageFailed
 		requestProcess.Error = fmt.Sprintf("anaylyze requirement %v", err)
 		return nil, fmt.Errorf("anaylyze requirement %w", err)
 	}
+	advanceSessionStatus(session)
 
 	userMsg, err := o.messageDao.Create(ctx, inspirationMsg)
 	if err != nil {
@@ -359,44 +362,4 @@ func toResponseWikiDefinition(item *model.WikiDefinition) *http_dto.WikiDefiniti
 		Summary: item.Summary,
 		FullURL: item.FullURL,
 	}
-}
-
-func statusForField(field model.RequirementField) model.SessionStatus {
-	switch field {
-	case model.RequirementFieldMood:
-		return model.SessionStatusAskingMood
-	case model.RequirementFieldScene:
-		return model.SessionStatusAskingScene
-	case model.RequirementFieldFocus:
-		return model.SessionStatusAskingFocus
-	default:
-		return model.SessionStatusAskingMood
-	}
-}
-
-func pickNextField(session *model.InspirationSession) (model.RequirementField, error) {
-	minScore := int(^uint(0) >> 1)
-	var selected model.RequirementField
-	for _, field := range []model.RequirementField{
-		model.RequirementFieldMood,
-		model.RequirementFieldScene,
-		model.RequirementFieldFocus,
-	} {
-		current, ok := session.CurrentRequirement()
-		if !ok {
-			return "", fmt.Errorf("current requirement is empty")
-		}
-		score := current.Get(field).Score
-		if score >= 3 {
-			continue
-		}
-		if score < minScore {
-			minScore = score
-			selected = field
-		}
-	}
-	if selected == "" {
-		return "", fmt.Errorf("no requirement field needs clarification")
-	}
-	return selected, nil
 }

@@ -41,3 +41,6 @@
 ### 6. Wikipedia 知识链接
 对于适合解释的关键词，系统会进一步调用 Wikipedia 获取 `summary` 和 `full_url`。于是用户在 hover 某个词时，弹出的不只是说明框，更像是一只小小的知识抽屉，被轻轻拉开后，里面藏着背景、来历和通往更远处的链接。
 <img src="docs/images/wiki_link.png" width="720" />
+
+## 下一步的方向计划
+对厘清用户需求的提问顺序配置多个策略，可基于config.json的配置调用不同策略，分别进行测试评估

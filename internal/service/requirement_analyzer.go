@@ -42,10 +42,10 @@ func (s *inspirationServiceImpl) analyzeRequirement(msg *model.InspirationMessag
 			item.Score = requirementSatisfiedScore
 		}
 		current.Set(targetField, item)
-		if session.IsReadyToGenerate() {
-			session.Status = model.SessionStatusCompleted
-		} else if nextField, err := s.pickNextField(session); err == nil {
-			session.Status = statusForField(nextField)
+		if !session.IsReadyToGenerate() {
+			if nextField, err := s.pickNextField(session); err == nil {
+				session.Status = statusForField(nextField)
+			}
 		}
 		return nil
 	}
