@@ -5,11 +5,13 @@ import "time"
 type RequestStage string
 
 const (
-	RequestStageDecoding   RequestStage = "decoding"
-	RequestStageAnalyzing  RequestStage = "analyzing"
-	RequestStageGenerating RequestStage = "generating"
-	RequestStageCompleted  RequestStage = "completed"
-	RequestStageFailed     RequestStage = "failed"
+	RequestStageDetectUserIntent    RequestStage = "detect_user_intent"
+	RequestStageAnalyzeRequirement  RequestStage = "analyze_requirement"
+	RequestStageGenerateOptions     RequestStage = "generate_options"
+	RequestStageGenerateInspiration RequestStage = "generate_inspiration"
+	RequestStageEnrichKeywords      RequestStage = "enrich_keywords"
+	RequestStageCompleted           RequestStage = "completed"
+	RequestStageFailed              RequestStage = "failed"
 )
 
 // RequestProcess tracks the progress of a ChatCompletion request

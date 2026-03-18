@@ -16,9 +16,11 @@ type RequestProcessRequest struct {
 // ToModel converts the request into a domain model ready for persistence.
 func (r RequestProcessRequest) ToModel() (*model.RequestProcess, error) {
 	stage := model.RequestStage(r.Stage)
-	if stage != model.RequestStageDecoding &&
-		stage != model.RequestStageAnalyzing &&
-		stage != model.RequestStageGenerating {
+	if stage != model.RequestStageDetectUserIntent &&
+		stage != model.RequestStageAnalyzeRequirement &&
+		stage != model.RequestStageGenerateOptions &&
+		stage != model.RequestStageGenerateInspiration &&
+		stage != model.RequestStageEnrichKeywords {
 		return nil, fmt.Errorf("invalid stage %q", r.Stage)
 	}
 

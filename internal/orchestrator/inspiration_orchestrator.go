@@ -61,7 +61,7 @@ func (o *inspirationOrchestrator) HandleChatCompletion(ctx context.Context, requ
 	requestProcess := &model.RequestProcess{
 		SessionID: request.SessionID,
 		UserID:    userID,
-		Stage:     model.RequestStageDecoding,
+		Stage:     model.RequestStageDetectUserIntent,
 		StartedAt: time.Now().UTC(),
 	}
 
@@ -126,11 +126,10 @@ func (o *inspirationOrchestrator) HandleChatCompletion(ctx context.Context, requ
 
 	targetField := statusClarifyField(session.Status)
 
-	requestProcess.Stage = model.RequestStageAnalyzing
-	if _, err := o.processDao.Update(ctx, requestProcess); err != nil {
+	if err := o.setRequestStage(ctx, requestProcess, model.RequestStageAnalyzeRequirement); err != nil {
 		requestProcess.Stage = model.RequestStageFailed
-		requestProcess.Error = fmt.Sprintf("update process to analyzing: %v", err)
-		return nil, fmt.Errorf("update process to analyzing: %w", err)
+		requestProcess.Error = fmt.Sprintf("update process to analyze requirement: %v", err)
+		return nil, fmt.Errorf("update process to analyze requirement: %w", err)
 	}
 
 	if err := o.requirementAgent.Analyze(ctx, inspirationMsg, session, targetField); err != nil {
@@ -148,14 +147,7 @@ func (o *inspirationOrchestrator) HandleChatCompletion(ctx context.Context, requ
 	}
 	session.Messages = append(session.Messages, userMsg.ID)
 
-	requestProcess.Stage = model.RequestStageGenerating
-	if _, err := o.processDao.Update(ctx, requestProcess); err != nil {
-		requestProcess.Stage = model.RequestStageFailed
-		requestProcess.Error = fmt.Sprintf("update process to generating: %v", err)
-		return nil, fmt.Errorf("update process to generating: %w", err)
-	}
-
-	assistantMsg, response, err := o.buildAssistantResponse(ctx, session, inspirationMsg)
+	assistantMsg, response, err := o.buildAssistantResponse(ctx, requestProcess, session, inspirationMsg)
 	if err != nil {
 		requestProcess.Stage = model.RequestStageFailed
 		requestProcess.Error = err.Error()
@@ -235,8 +227,11 @@ func (o *inspirationOrchestrator) handleNonTravelInput(ctx context.Context, sess
 	}, nil
 }
 
-func (o *inspirationOrchestrator) buildAssistantResponse(ctx context.Context, session *model.InspirationSession, inspirationMsg *model.InspirationMessage) (*model.InspirationMessage, *http_dto.InspirationMessageResponse, error) {
+func (o *inspirationOrchestrator) buildAssistantResponse(ctx context.Context, requestProcess *model.RequestProcess, session *model.InspirationSession, inspirationMsg *model.InspirationMessage) (*model.InspirationMessage, *http_dto.InspirationMessageResponse, error) {
 	if session.IsReadyToGenerate() {
+		if err := o.setRequestStage(ctx, requestProcess, model.RequestStageGenerateInspiration); err != nil {
+			return nil, nil, fmt.Errorf("update process to generate inspiration: %w", err)
+		}
 		replyContent, err := o.inspirationAgent.Generate(ctx, session)
 		if err != nil {
 			return nil, nil, fmt.Errorf("generate inspiration %w", err)
@@ -244,7 +239,7 @@ func (o *inspirationOrchestrator) buildAssistantResponse(ctx context.Context, se
 		current, ok := session.CurrentRequirement()
 		if ok {
 			current.Output = replyContent
-			o.enrichGeneratedInspiration(ctx, current)
+			o.enrichGeneratedInspiration(ctx, requestProcess, current)
 		}
 		session.Status = model.SessionStatusCompleted
 
@@ -264,6 +259,9 @@ func (o *inspirationOrchestrator) buildAssistantResponse(ctx context.Context, se
 			}, nil
 	}
 
+	if err := o.setRequestStage(ctx, requestProcess, model.RequestStageGenerateOptions); err != nil {
+		return nil, nil, fmt.Errorf("update process to generate options: %w", err)
+	}
 	field, err := pickNextField(session)
 	if err != nil {
 		return nil, nil, fmt.Errorf("pick next field: %w", err)
@@ -292,10 +290,11 @@ func (o *inspirationOrchestrator) buildAssistantResponse(ctx context.Context, se
 		}, nil
 }
 
-func (o *inspirationOrchestrator) enrichGeneratedInspiration(ctx context.Context, inspiration *model.Inspiration) {
+func (o *inspirationOrchestrator) enrichGeneratedInspiration(ctx context.Context, requestProcess *model.RequestProcess, inspiration *model.Inspiration) {
 	if inspiration == nil || o.keywordAgent == nil {
 		return
 	}
+	_ = o.setRequestStage(ctx, requestProcess, model.RequestStageEnrichKeywords)
 
 	keywords, err := o.keywordAgent.ExtractKeywordsFromOutput(ctx, inspiration.Output)
 	if err != nil {
@@ -309,6 +308,15 @@ func (o *inspirationOrchestrator) enrichGeneratedInspiration(ctx context.Context
 		keywords = o.wikipediaAgent.EnrichKeywords(ctx, keywords)
 	}
 	inspiration.KeyWords = keywords
+}
+
+func (o *inspirationOrchestrator) setRequestStage(ctx context.Context, requestProcess *model.RequestProcess, stage model.RequestStage) error {
+	if requestProcess == nil {
+		return fmt.Errorf("request process is nil")
+	}
+	requestProcess.Stage = stage
+	_, err := o.processDao.Update(ctx, requestProcess)
+	return err
 }
 
 func toResponseOptions(opts []model.Option) []http_dto.ResponseOption {
