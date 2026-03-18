@@ -56,7 +56,7 @@ func (a *inspirationAgent) Generate(_ context.Context, session *model.Inspiratio
 	if err != nil {
 		return "", fmt.Errorf("generate inspiration: %w", err)
 	}
-	return strings.TrimSpace(resp), nil
+	return stripMarkdownToPlainText(resp), nil
 }
 
 const genInspirationPrompt = `
@@ -76,10 +76,11 @@ const genInspirationPrompt = `
 [核心关注点/行动]
 %s
 要求:
-1. 以中文输出,给这段文字起一个标题,并在第一段用1-3句话对内容进行简洁概括.
-2. 如果目的景点有一定的历史文化背景,请先简单科普介绍.
-3. 内容中要体现可执行的场景细节(季节/时间/地点/动作),其中地点一定要很精确,如县/小镇/村庄/城市的区域.
-4. 请使用第三人称的视角进行介绍.
+1. 以中文输出,给这段文字起一个标题,并在第一段用1-3句话对内容进行简洁概括。
+2. 不要使用 markdown,不要输出标题符号、加粗符号、列表符号、代码块或链接格式,只输出纯文本。
+3. 如果目的景点有一定的历史文化背景,请先简单科普介绍。
+4. 内容中要体现可执行的场景细节(季节/时间/地点/动作),其中地点一定要很精确,如县/小镇/村庄/城市的区域。
+5. 请使用第三人称的视角进行介绍。
 `
 
 const RoleIteraryTripPlanner = `
