@@ -200,7 +200,7 @@ func (o *inspirationOrchestrator) handleNonTravelInput(ctx context.Context, sess
 	}
 	session.Messages = append(session.Messages, userMsg.ID)
 
-	content := "当前输入未识别为旅行请求,请更具体描述你的旅行意图"
+	content := "当前输入更像文学解释、作品讨论或书单请求，还不是旅行灵感请求。若想把它转成旅行方向，请补充想去体验的地点、场景，或希望在旅行中做什么。"
 	assistantMsg := &model.InspirationMessage{
 		SessionID: inspirationMsg.SessionID,
 		Role:      model.InspirationMessageRoleAssistant,

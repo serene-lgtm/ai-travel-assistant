@@ -40,13 +40,21 @@ func statusClarifyField(status model.SessionStatus) model.RequirementField {
 }
 
 func pickNextField(session *model.InspirationSession) (model.RequirementField, error) {
+	current, ok := session.CurrentRequirement()
+	if !ok {
+		return "", fmt.Errorf("current requirement is empty")
+	}
+
+	if current.HasSceneCandidates() {
+		return model.RequirementFieldScene, nil
+	}
+	if shouldPrioritizeFocus(current) {
+		return model.RequirementFieldFocus, nil
+	}
+
 	minScore := int(^uint(0) >> 1)
 	var selected model.RequirementField
 	for _, field := range requirementFieldOrder {
-		current, ok := session.CurrentRequirement()
-		if !ok {
-			return "", fmt.Errorf("current requirement is empty")
-		}
 		score := current.Get(field).Score
 		if score >= 3 {
 			continue
@@ -72,4 +80,11 @@ func advanceSessionStatus(session *model.InspirationSession) {
 	if nextField, err := pickNextField(session); err == nil {
 		session.Status = statusForField(nextField)
 	}
+}
+
+func shouldPrioritizeFocus(current *model.Inspiration) bool {
+	if current == nil {
+		return false
+	}
+	return current.Focus.Score >= 3 && current.Scene.Score < 3 && current.Mood.Score < 3
 }

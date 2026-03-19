@@ -54,6 +54,10 @@ func (a *requirementAnalyzerAgent) applyUserChoice(current *model.Inspiration, t
 	// targetField points to the requirement slot the current choice should fill.
 	item := current.Get(targetField)
 	item.SelectedOption = selected
+	if targetField == model.RequirementFieldScene {
+		item.Content = selected
+		current.SetSceneCandidates(nil)
+	}
 	if item.Score < requirementSatisfiedScore {
 		item.Score = requirementSatisfiedScore
 	}
@@ -83,7 +87,7 @@ func (a *requirementAnalyzerAgent) analyzeFreeTextInput(current *model.Inspirati
 			continue
 		}
 
-		value, score, err := a.extractRequirementField(flow.field, flow.extractionPrompt, flow.scoringPrompt, inputText)
+		value, score, candidates, err := a.extractRequirementField(flow.field, flow.extractionPrompt, flow.scoringPrompt, inputText)
 		if err != nil {
 			return fmt.Errorf("extract %s: %w", flow.field, err)
 		}
@@ -92,6 +96,9 @@ func (a *requirementAnalyzerAgent) analyzeFreeTextInput(current *model.Inspirati
 		item.Content = value
 		item.Score = score
 		current.Set(flow.field, item)
+		if flow.field == model.RequirementFieldScene {
+			current.SetSceneCandidates(candidates)
+		}
 	}
 
 	if targetField != "" && current.Get(targetField).Content == "" {
@@ -100,32 +107,100 @@ func (a *requirementAnalyzerAgent) analyzeFreeTextInput(current *model.Inspirati
 	return nil
 }
 
-func (a *requirementAnalyzerAgent) extractRequirementField(field model.RequirementField, extractionTemplate, scoringGuide, userInput string) (string, int, error) {
+func (a *requirementAnalyzerAgent) extractRequirementField(field model.RequirementField, extractionTemplate, scoringGuide, userInput string) (string, int, []string, error) {
 	extractionPrompt := fmt.Sprintf(extractionTemplate, userInput)
 	prompt := fmt.Sprintf(`%s
 
-请忽略上文原有的输出格式要求,统一只输出 JSON {"content":"...", "score": <0-5 的整数>}.
+请忽略上文原有的输出格式要求,统一只输出 JSON {"content":"...", "score": <0-5 的整数>%s}.
 说明:
 - content 是你依据上述指引为[%s]提炼出的关键信息,若无法提取请设为""。
 - score 按以下标准给出0-5之间的整数,0表示信息缺失:
 %s
-`, extractionPrompt, fieldLabels[field], scoringGuide)
+`, extractionPrompt, optionalCandidatesField(field), fieldLabels[field], scoringGuide)
 
 	raw, err := a.llmClient.Call(prompt)
 	if err != nil {
-		return "", 0, err
+		return "", 0, nil, err
 	}
 
 	var payload map[string]any
 	if err := decodeFirstJSONObject(raw, &payload); err != nil {
-		return "", 0, err
+		return "", 0, nil, err
 	}
 
 	content := ""
 	if val, ok := payload["content"].(string); ok {
 		content = strings.TrimSpace(val)
 	}
-	return content, normalizeScore(payload["score"]), nil
+	candidates := extractStringList(payload["candidates"])
+	if field == model.RequirementFieldScene {
+		content, candidates = normalizeSceneResult(content, candidates)
+		return content, normalizeSceneScore(payload["score"], content, candidates), candidates, nil
+	}
+	return content, normalizeScore(payload["score"]), nil, nil
+}
+
+func optionalCandidatesField(field model.RequirementField) string {
+	if field == model.RequirementFieldScene {
+		return `, "candidates":["..."]`
+	}
+	return ""
+}
+
+func normalizeSceneScore(raw any, content string, candidates []string) int {
+	if len(candidates) > 1 {
+		return 2
+	}
+	if strings.TrimSpace(content) == "" {
+		return 0
+	}
+	return normalizeScore(raw)
+}
+
+func normalizeSceneResult(content string, candidates []string) (string, []string) {
+	content = strings.TrimSpace(content)
+	candidates = normalizeLocations(candidates)
+
+	if len(candidates) > 1 {
+		return "", candidates
+	}
+	if len(candidates) == 1 {
+		return candidates[0], nil
+	}
+	return content, nil
+}
+
+func normalizeLocations(items []string) []string {
+	out := make([]string, 0, len(items))
+	seen := make(map[string]struct{}, len(items))
+	for _, item := range items {
+		item = strings.TrimSpace(item)
+		if item == "" {
+			continue
+		}
+		if _, ok := seen[item]; ok {
+			continue
+		}
+		seen[item] = struct{}{}
+		out = append(out, item)
+	}
+	return out
+}
+
+func extractStringList(raw any) []string {
+	values, ok := raw.([]any)
+	if !ok {
+		return nil
+	}
+	out := make([]string, 0, len(values))
+	for _, value := range values {
+		text, ok := value.(string)
+		if !ok {
+			continue
+		}
+		out = append(out, text)
+	}
+	return out
 }
 
 var fieldLabels = map[model.RequirementField]string{
@@ -194,10 +269,13 @@ const (
  2. 描述或暗示的环境氛围特征,如雪中小镇,古老街区.
  3. 对环境和地貌的描述,如海边悬崖,森林深处,峡湾地貌.
     请不要做置信度低的推导.
+ 4. 如果只能高置信度联想到多个不同地点,请不要替用户做决定,把这些地点放入 candidates.
 
 要求:
-1. 只返回 JSON:{"scene": "<地点,多个用,分隔;若无则空字符串>"}
-2. 请返回最相关的1-3个地点,如果没有提及地点或无法确定,scene设为"".
+1. 统一只准备地点信息,不要混入动作、体验、情绪或美食等内容.
+2. 若只有一个明确地点,content 填该地点,candidates 设为空数组.
+3. 若有多个高置信度地点,content 设为"",candidates 填2-3个纯地点候选.
+4. 如果没有提及地点或无法确定,content 设为"",candidates 设为空数组.
 
 用户请求:
 """%s"""`
