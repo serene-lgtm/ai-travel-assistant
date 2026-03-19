@@ -33,14 +33,15 @@ type InspirationSession struct {
 
 // Inspiration captures one full inspiration requirement set with all structured fields.
 type Inspiration struct {
-	ID         string          `json:"id" bson:"id"`
-	UserID     string          `json:"user_id" bson:"uid"`
-	Mood       RequirementItem `json:"mood" bson:"mood"`
-	Scene      RequirementItem `json:"scene" bson:"scene"`
-	Focus      RequirementItem `json:"focus" bson:"focus"`
-	Output     string          `json:"output" bson:"op"`
-	KeyWords   []KeyWord       `json:"keywords" bson:"kws"`
-	IsFavorite bool            `json:"is_favorite" bson:"if"`
+	ID              string          `json:"id" bson:"id"`
+	UserID          string          `json:"user_id" bson:"uid"`
+	Mood            RequirementItem `json:"mood" bson:"mood"`
+	Scene           RequirementItem `json:"scene" bson:"scene"`
+	Focus           RequirementItem `json:"focus" bson:"focus"`
+	SceneCandidates []string        `json:"-" bson:"scene_cands,omitempty"`
+	Output          string          `json:"output" bson:"op"`
+	KeyWords        []KeyWord       `json:"keywords" bson:"kws"`
+	IsFavorite      bool            `json:"is_favorite" bson:"if"`
 }
 
 type KeyWord struct {
@@ -137,6 +138,21 @@ func (r *Inspiration) Set(field RequirementField, item RequirementItem) {
 	}
 }
 
+func (r *Inspiration) HasSceneCandidates() bool {
+	return r != nil && len(r.SceneCandidates) > 1
+}
+
+func (r *Inspiration) SetSceneCandidates(candidates []string) {
+	if r == nil {
+		return
+	}
+	if len(candidates) == 0 {
+		r.SceneCandidates = nil
+		return
+	}
+	r.SceneCandidates = append(r.SceneCandidates[:0], candidates...)
+}
+
 // IsReadyToGenerate reports whether the session has enough structured info to move forward with plan generation.
 func (s *InspirationSession) IsReadyToGenerate() bool {
 	if s == nil {
@@ -146,15 +162,21 @@ func (s *InspirationSession) IsReadyToGenerate() bool {
 	if !ok {
 		return false
 	}
+	if current.HasSceneCandidates() {
+		return false
+	}
 
 	mood := current.Mood.Score
 	scene := current.Scene.Score
 	focus := current.Focus.Score
 
-	if mood >= 3 && scene >= 3 && focus >= 3 {
+	if scene < 3 {
+		return false
+	}
+	if mood >= 3 && focus >= 3 {
 		return true
 	}
-	if (mood >= 4 && scene >= 2) || (focus >= 4 && scene >= 2) {
+	if (mood >= 4 && focus >= 2) || (focus >= 4 && mood >= 2) {
 		return true
 	}
 	return false

@@ -35,6 +35,11 @@ func (a *clarificationAgent) GenerateQuestion(_ context.Context, field model.Req
 	if a.llmClient == nil {
 		return nil, fmt.Errorf("clarification agent llm client is not initialized")
 	}
+	if field == model.RequirementFieldScene {
+		if result := buildSceneCandidateQuestion(session); result != nil {
+			return result, nil
+		}
+	}
 
 	guidance := fieldGuidance[field]
 	summary := summarizeRequirementState(session)
@@ -49,6 +54,9 @@ func (a *clarificationAgent) GenerateQuestion(_ context.Context, field model.Req
 2. options 列表包含2-4个不超过20字的候选,具体且互相区分。
 3. 问题要温柔、鼓励式,针对用户视角描述。
 4. 不允许自由输入,请选择可执行的选项。
+5. 如果目标字段是[旅行场景], options 只能写地点或连贯区域,不要混入动作、情绪、节奏、美食或文学主题。
+6. 如果目标字段是[核心焦点], options 只能写行动、体验或感官关注点,不要混入地点。
+7. 如果目标字段是[情感基调], options 只能写情绪、气质或氛围,不要混入地点和行动。
 `, summary, label, guidance)
 
 	raw, err := a.llmClient.Call(prompt)
@@ -89,6 +97,34 @@ func (a *clarificationAgent) GenerateQuestion(_ context.Context, field model.Req
 		Options:     opts,
 		TargetField: field,
 	}, nil
+}
+
+func buildSceneCandidateQuestion(session *model.InspirationSession) *ClarificationResult {
+	if session == nil {
+		return nil
+	}
+	current, ok := session.CurrentRequirement()
+	if !ok || !current.HasSceneCandidates() {
+		return nil
+	}
+
+	opts := make([]model.Option, 0, len(current.SceneCandidates))
+	for _, candidate := range current.SceneCandidates {
+		candidate = strings.TrimSpace(candidate)
+		if candidate == "" {
+			continue
+		}
+		opts = append(opts, model.Option{Content: candidate})
+	}
+	if len(opts) < 2 {
+		return nil
+	}
+
+	return &ClarificationResult{
+		Question:    "这次旅行更想先落到哪个地方？先选一个方向，我再继续把它写具体。",
+		Options:     opts,
+		TargetField: model.RequirementFieldScene,
+	}
 }
 
 var fieldGuidance = map[model.RequirementField]string{

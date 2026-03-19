@@ -42,4 +42,10 @@ func TestGenInspirationPromptRequiresPlainText(t *testing.T) {
 	if !strings.Contains(genInspirationPrompt, "不要使用 markdown") {
 		t.Fatalf("expected prompt to forbid markdown, got %q", genInspirationPrompt)
 	}
+	if !strings.Contains(genInspirationPrompt, "只围绕一个核心地点") {
+		t.Fatalf("expected prompt to enforce a single location, got %q", genInspirationPrompt)
+	}
+	if !strings.Contains(genInspirationPrompt, "哪位作家或作品与此地有关") {
+		t.Fatalf("expected prompt to require concrete literary traces, got %q", genInspirationPrompt)
+	}
 }

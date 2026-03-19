@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -45,6 +46,8 @@ type TokenConfig struct {
 
 var config *Config
 
+const deepseekAPIKeyPlaceholder = "偷api_key的替我挡灾"
+
 // Global returns the configuration that was loaded at init.
 func Global() *Config {
 	if config == nil {
@@ -56,11 +59,17 @@ func Global() *Config {
 func init() {
 	path, err := resolveConfigPath()
 	if err != nil {
+		if isTestBinary() {
+			return
+		}
 		panic(fmt.Sprintf("resolve config path: %v", err))
 	}
 
 	cfg, err := LoadConfig(path)
 	if err != nil {
+		if isTestBinary() {
+			return
+		}
 		panic(fmt.Sprintf("load config: %v", err))
 	}
 	config = cfg
@@ -78,6 +87,7 @@ func LoadConfig(path string) (*Config, error) {
 		return nil, fmt.Errorf("parse config failed: %w", err)
 	}
 
+	cfg.Deepseek.APIKey = resolveDeepseekAPIKey(cfg.Deepseek.APIKey)
 	cfg.applyDefaults()
 	if err := cfg.validate(); err != nil {
 		return nil, err
@@ -130,7 +140,7 @@ func (cfg *Config) applyDefaults() {
 
 func (cfg *Config) validate() error {
 	if cfg.Deepseek.APIKey == "" {
-		return fmt.Errorf("config deepseek.api_key is empty")
+		return fmt.Errorf("deepseek api key is missing; provide deepseek.api_key in config.json or DEEPSEEK_API_KEY")
 	}
 	if cfg.Deepseek.Model == "" {
 		return fmt.Errorf("config deepseek.model is empty")
@@ -145,4 +155,17 @@ func (cfg *Config) validate() error {
 		return fmt.Errorf("config mongo.timeout must be > 0")
 	}
 	return nil
+}
+
+func resolveDeepseekAPIKey(configValue string) string {
+	key := strings.TrimSpace(configValue)
+	if key != "" && key != deepseekAPIKeyPlaceholder {
+		return key
+	}
+
+	return strings.TrimSpace(os.Getenv("DEEPSEEK_API_KEY"))
+}
+
+func isTestBinary() bool {
+	return strings.HasSuffix(os.Args[0], ".test")
 }
