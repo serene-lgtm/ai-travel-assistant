@@ -1,0 +1,110 @@
+[
+  {
+    "id": "intent_001",
+    "category": "intent",
+    "description": "明确想去敦煌感受历史现场",
+    "tags": ["travel", "history"],
+    "input": {"content": "我想去敦煌找一点历史感，最好能慢慢看壁画和旧遗址。"},
+    "expected": {"travel_related": true},
+    "rubric": ["intent_correct"]
+  },
+  {
+    "id": "intent_002",
+    "category": "intent",
+    "description": "以海边散步和住几天为目标的旅行请求",
+    "tags": ["travel", "sea"],
+    "input": {"content": "想找个海边小城住上几天，每天散步看港口。"},
+    "expected": {"travel_related": true},
+    "rubric": ["intent_correct"]
+  },
+  {
+    "id": "intent_003",
+    "category": "intent",
+    "description": "明确想做写作旅行",
+    "tags": ["travel", "writing"],
+    "input": {"content": "我想策划一次写作之旅，找一个适合慢慢待着的地方。"},
+    "expected": {"travel_related": true},
+    "rubric": ["intent_correct"]
+  },
+  {
+    "id": "intent_004",
+    "category": "intent",
+    "description": "围绕作家足迹的旅行意图",
+    "tags": ["travel", "literary"],
+    "input": {"content": "想顺着海明威的生活痕迹去旅行，看看他待过的城市空间。"},
+    "expected": {"travel_related": true},
+    "rubric": ["intent_correct"]
+  },
+  {
+    "id": "intent_005",
+    "category": "intent",
+    "description": "纯文学概念解释",
+    "tags": ["non_travel", "literary"],
+    "input": {"content": "请解释一下物哀是什么意思，它为什么常被拿来形容日本文学？"},
+    "expected": {"travel_related": false},
+    "rubric": ["intent_correct"]
+  },
+  {
+    "id": "intent_006",
+    "category": "intent",
+    "description": "围绕作家的纯作品讨论",
+    "tags": ["non_travel", "literary"],
+    "input": {"content": "想聊聊海明威小说里那种硬朗又疲惫的气质是怎么形成的。"},
+    "expected": {"travel_related": false},
+    "rubric": ["intent_correct"]
+  },
+  {
+    "id": "intent_007",
+    "category": "intent",
+    "description": "情绪倾诉，不包含出行目标",
+    "tags": ["non_travel", "emotion"],
+    "input": {"content": "最近总觉得生活很闷，像被困在一间没有窗的屋子里，不知道怎么调节。"},
+    "expected": {"travel_related": false},
+    "rubric": ["intent_correct"]
+  },
+  {
+    "id": "intent_008",
+    "category": "intent",
+    "description": "写作任务，不要求出行体验",
+    "tags": ["non_travel", "writing_task"],
+    "input": {"content": "帮我写一段带点旧港口气息的小说开头，背景设定在上世纪的雨夜。"},
+    "expected": {"travel_related": false},
+    "rubric": ["intent_correct"]
+  },
+  {
+    "id": "intent_009",
+    "category": "intent",
+    "description": "文学意味强但目标是去某地体验",
+    "tags": ["travel", "boundary"],
+    "input": {"content": "我想去找那种像小说里旧时代码头一样的地方，真的走走看看。"},
+    "expected": {"travel_related": true},
+    "rubric": ["intent_correct"]
+  },
+  {
+    "id": "intent_010",
+    "category": "intent",
+    "description": "电影触发的旅行灵感",
+    "tags": ["travel", "boundary"],
+    "input": {"content": "看完《长安三万里》有点触动，想顺着唐诗去旅行。"},
+    "expected": {"travel_related": true},
+    "rubric": ["intent_correct"]
+  },
+  {
+    "id": "intent_011",
+    "category": "intent",
+    "description": "人文知识问答，没有在地体验目标",
+    "tags": ["non_travel", "knowledge"],
+    "input": {"content": "请解释一下茶马古道在历史上主要承担了什么作用。"},
+    "expected": {"travel_related": false},
+    "rubric": ["intent_correct"]
+  },
+  {
+    "id": "intent_012",
+    "category": "intent",
+    "description": "生活决策，不属于旅行灵感请求",
+    "tags": ["non_travel", "daily_life"],
+    "input": {"content": "如果只有三天假期，你觉得我是该在家休息，还是把时间拿来集中处理工作积压？"},
+    "expected": {"travel_related": false},
+    "rubric": ["intent_correct"]
+  }
+]

@@ -1,0 +1,230 @@
+[
+  {
+    "id": "inspiration_001",
+    "category": "inspiration",
+    "description": "围绕神保町生成文学旧书街灵感",
+    "tags": ["literary", "writer"],
+    "input": {"content": "我想去东京神保町待几天，逛旧书店、写点东西，也想找找作家生活留下的痕迹。"},
+    "session_state": {
+      "status": "completed",
+      "target_field": "",
+      "current_requirement": {
+        "mood": {"content": "怀旧、克制、安静", "score": 4},
+        "scene": {"content": "东京神保町", "score": 4},
+        "focus": {"content": "旧书店漫游、写作、寻找作家生活痕迹", "score": 4},
+        "scene_candidates": []
+      }
+    },
+    "expected": {"single_core_place_required": true, "content_must_include": ["神保町"]},
+    "rubric": ["intent_fit", "single_place_grounding", "actionable_detail", "literary_quality", "hallucination_check"]
+  },
+  {
+    "id": "inspiration_002",
+    "category": "inspiration",
+    "description": "围绕小樽港口旧城区生成怀旧旅行灵感",
+    "tags": ["literary", "port"],
+    "input": {"content": "想去北海道小樽住几天，晚上沿运河散步，白天在老仓库和咖啡馆之间慢慢走，写一点东西。"},
+    "session_state": {
+      "status": "completed",
+      "target_field": "",
+      "current_requirement": {
+        "mood": {"content": "旧时光、清冷、柔和", "score": 4},
+        "scene": {"content": "北海道小樽运河周边", "score": 4},
+        "focus": {"content": "看仓库群、夜里散步、在咖啡馆写字", "score": 4},
+        "scene_candidates": []
+      }
+    },
+    "expected": {"single_core_place_required": true, "content_must_include": ["小樽"]},
+    "rubric": ["intent_fit", "single_place_grounding", "actionable_detail", "literary_quality", "hallucination_check"]
+  },
+  {
+    "id": "inspiration_003",
+    "category": "inspiration",
+    "description": "围绕京都东山清晨生成寺院片区灵感",
+    "tags": ["literary", "spiritual"],
+    "input": {"content": "我想去京都东山，清晨沿寺院和石阶慢慢走，在安静的地方停一停，感受一点清冷的秩序感。"},
+    "session_state": {
+      "status": "completed",
+      "target_field": "",
+      "current_requirement": {
+        "mood": {"content": "清冷、沉静、克制", "score": 4},
+        "scene": {"content": "京都东山寺院片区", "score": 4},
+        "focus": {"content": "清晨步行、看石阶、在寺院外停留", "score": 4},
+        "scene_candidates": []
+      }
+    },
+    "expected": {"single_core_place_required": true, "content_must_include": ["东山"]},
+    "rubric": ["intent_fit", "single_place_grounding", "actionable_detail", "literary_quality", "hallucination_check"]
+  },
+  {
+    "id": "inspiration_004",
+    "category": "inspiration",
+    "description": "围绕神户旧居留地生成异国旧时光灵感",
+    "tags": ["literary", "history"],
+    "input": {"content": "想去神户旧居留地看看旧建筑和街道立面，傍晚散步，写点札记，感受一点异国旧时光。"},
+    "session_state": {
+      "status": "completed",
+      "target_field": "",
+      "current_requirement": {
+        "mood": {"content": "异国旧时光、节制、安静", "score": 4},
+        "scene": {"content": "神户旧居留地", "score": 4},
+        "focus": {"content": "看旧建筑立面、傍晚散步、写札记", "score": 4},
+        "scene_candidates": []
+      }
+    },
+    "expected": {"single_core_place_required": true, "content_must_include": ["神户"]},
+    "rubric": ["intent_fit", "single_place_grounding", "actionable_detail", "literary_quality", "hallucination_check"]
+  },
+  {
+    "id": "inspiration_005",
+    "category": "inspiration",
+    "description": "围绕敦煌生成历史人文旅行灵感",
+    "tags": ["history"],
+    "input": {"content": "我想去敦煌，看壁画和石窟，黄昏时再走到城郊戈壁边上，体会古代通道留下的历史感。"},
+    "session_state": {
+      "status": "completed",
+      "target_field": "",
+      "current_requirement": {
+        "mood": {"content": "庄重、历史回声、辽阔", "score": 4},
+        "scene": {"content": "敦煌莫高窟与城郊戈壁地带", "score": 4},
+        "focus": {"content": "看壁画、黄昏走到戈壁边缘、理解古代通道感", "score": 4},
+        "scene_candidates": []
+      }
+    },
+    "expected": {"single_core_place_required": true, "content_must_include": ["敦煌"]},
+    "rubric": ["intent_fit", "single_place_grounding", "actionable_detail", "literary_quality", "hallucination_check"]
+  },
+  {
+    "id": "inspiration_006",
+    "category": "inspiration",
+    "description": "围绕平遥古城生成旧时代街巷体验",
+    "tags": ["history"],
+    "input": {"content": "想去平遥古城住两天，沿城墙走一走，看票号旧址，在清晨的街巷里慢慢停留，感受旧时代气息。"},
+    "session_state": {
+      "status": "completed",
+      "target_field": "",
+      "current_requirement": {
+        "mood": {"content": "克制、旧时代、沉静", "score": 4},
+        "scene": {"content": "平遥古城内街巷", "score": 4},
+        "focus": {"content": "沿城墙走、看票号旧址、在清晨街巷停留", "score": 4},
+        "scene_candidates": []
+      }
+    },
+    "expected": {"single_core_place_required": true, "content_must_include": ["平遥"]},
+    "rubric": ["intent_fit", "single_place_grounding", "actionable_detail", "literary_quality", "hallucination_check"]
+  },
+  {
+    "id": "inspiration_007",
+    "category": "inspiration",
+    "description": "围绕长安旧都气质生成历史灵感",
+    "tags": ["history", "poetry"],
+    "input": {"content": "我想去西安，沿城墙慢慢走，也去碑林看看石刻，顺着唐诗留下的痕迹感受一点旧都气质。"},
+    "session_state": {
+      "status": "completed",
+      "target_field": "",
+      "current_requirement": {
+        "mood": {"content": "宏阔、史诗、带诗意", "score": 4},
+        "scene": {"content": "西安城墙与碑林片区", "score": 4},
+        "focus": {"content": "沿城墙行走、读唐诗、看碑刻", "score": 4},
+        "scene_candidates": []
+      }
+    },
+    "expected": {"single_core_place_required": true, "content_must_include": ["西安"]},
+    "rubric": ["intent_fit", "single_place_grounding", "actionable_detail", "literary_quality", "hallucination_check"]
+  },
+  {
+    "id": "inspiration_008",
+    "category": "inspiration",
+    "description": "围绕梅里雪山脚下村落生成自然灵感",
+    "tags": ["nature"],
+    "input": {"content": "想去梅里雪山脚下的村落住几天，清晨看山体光线变化，白天慢慢步行，不想赶路，只想停留。"},
+    "session_state": {
+      "status": "completed",
+      "target_field": "",
+      "current_requirement": {
+        "mood": {"content": "安静、被自然压住、敬畏", "score": 4},
+        "scene": {"content": "梅里雪山脚下村落", "score": 4},
+        "focus": {"content": "清晨看山体光线变化、缓慢步行、停留", "score": 4},
+        "scene_candidates": []
+      }
+    },
+    "expected": {"single_core_place_required": true, "content_must_include": ["梅里雪山"]},
+    "rubric": ["intent_fit", "single_place_grounding", "actionable_detail", "literary_quality", "hallucination_check"]
+  },
+  {
+    "id": "inspiration_009",
+    "category": "inspiration",
+    "description": "围绕虎跳峡高路步道生成自然徒步灵感",
+    "tags": ["nature"],
+    "input": {"content": "我想去云南虎跳峡的高路步道徒步，傍晚还留在峡谷里听水声、看岩壁颜色变化，感受被风景压住的清醒。"},
+    "session_state": {
+      "status": "completed",
+      "target_field": "",
+      "current_requirement": {
+        "mood": {"content": "被风景震住、清醒", "score": 4},
+        "scene": {"content": "云南虎跳峡高路步道", "score": 4},
+        "focus": {"content": "傍晚徒步、听水声、看岩壁颜色变化", "score": 4},
+        "scene_candidates": []
+      }
+    },
+    "expected": {"single_core_place_required": true, "content_must_include": ["虎跳峡"]},
+    "rubric": ["intent_fit", "single_place_grounding", "actionable_detail", "literary_quality", "hallucination_check"]
+  },
+  {
+    "id": "inspiration_010",
+    "category": "inspiration",
+    "description": "围绕小樽港口片区生成修复型旅行灵感",
+    "tags": ["nature", "sea"],
+    "input": {"content": "想去北海道小樽港口片区住上几天，每天看潮水、傍晚散步，不安排太多事，只想慢慢恢复一点力气。"},
+    "session_state": {
+      "status": "completed",
+      "target_field": "",
+      "current_requirement": {
+        "mood": {"content": "放空、修复、柔和", "score": 4},
+        "scene": {"content": "北海道小樽港口片区", "score": 4},
+        "focus": {"content": "看潮水、住几天、傍晚散步", "score": 4},
+        "scene_candidates": []
+      }
+    },
+    "expected": {"single_core_place_required": true, "content_must_include": ["小樽"]},
+    "rubric": ["intent_fit", "single_place_grounding", "actionable_detail", "literary_quality", "hallucination_check"]
+  },
+  {
+    "id": "inspiration_011",
+    "category": "inspiration",
+    "description": "围绕汪曾祺气质生成故乡空间灵感",
+    "tags": ["writer", "literary"],
+    "input": {"content": "我想去高邮走走，找旧街巷和日常生活的空间，慢慢吃饭，感受一点像汪曾祺笔下那样温润的日常。"},
+    "session_state": {
+      "status": "completed",
+      "target_field": "",
+      "current_requirement": {
+        "mood": {"content": "日常、温润、细碎的好感", "score": 4},
+        "scene": {"content": "江苏高邮老城片区", "score": 4},
+        "focus": {"content": "找旧街巷、慢慢吃饭、体会作家笔下的日常感", "score": 4},
+        "scene_candidates": []
+      }
+    },
+    "expected": {"single_core_place_required": true, "content_must_include": ["高邮"]},
+    "rubric": ["intent_fit", "single_place_grounding", "actionable_detail", "literary_quality", "hallucination_check"]
+  },
+  {
+    "id": "inspiration_012",
+    "category": "inspiration",
+    "description": "围绕鲁迅旧居周边生成作家痕迹灵感",
+    "tags": ["writer", "literary"],
+    "input": {"content": "想去绍兴鲁迅故里附近走旧巷、看故居，在水边停留一会儿，追寻一点作家留下的现实痕迹。"},
+    "session_state": {
+      "status": "completed",
+      "target_field": "",
+      "current_requirement": {
+        "mood": {"content": "冷静、清醒、带一点旧社会质感", "score": 4},
+        "scene": {"content": "绍兴鲁迅故里片区", "score": 4},
+        "focus": {"content": "走旧巷、看故居、在水边停留", "score": 4},
+        "scene_candidates": []
+      }
+    },
+    "expected": {"single_core_place_required": true, "content_must_include": ["绍兴"]},
+    "rubric": ["intent_fit", "single_place_grounding", "actionable_detail", "literary_quality", "hallucination_check"]
+  }
+]

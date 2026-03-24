@@ -1,0 +1,230 @@
+[
+  {
+    "id": "clarify_001",
+    "category": "clarification",
+    "description": "写作型旅行但地点缺失，应追问 scene",
+    "tags": ["scene", "writing"],
+    "input": {"content": "我想去一个适合慢慢散步和写东西的地方。"},
+    "session_state": {
+      "status": "askingScene",
+      "target_field": "scene",
+      "current_requirement": {
+        "mood": {"content": "安静、适合沉下来", "score": 3},
+        "scene": {"content": "", "score": 0},
+        "focus": {"content": "散步、写作", "score": 4},
+        "scene_candidates": []
+      }
+    },
+    "expected": {"target_field": "scene", "option_count_min": 2, "option_count_max": 4},
+    "rubric": ["target_field_correct", "question_quality", "options_quality", "scene_option_purity"]
+  },
+  {
+    "id": "clarify_002",
+    "category": "clarification",
+    "description": "历史感明确但地点缺失，应追问 scene",
+    "tags": ["scene", "history"],
+    "input": {"content": "想在有历史层累感的地方慢慢走。"},
+    "session_state": {
+      "status": "askingScene",
+      "target_field": "scene",
+      "current_requirement": {
+        "mood": {"content": "沉静、带历史回声", "score": 3},
+        "scene": {"content": "", "score": 0},
+        "focus": {"content": "慢慢走、观察", "score": 3},
+        "scene_candidates": []
+      }
+    },
+    "expected": {"target_field": "scene", "option_count_min": 2, "option_count_max": 4},
+    "rubric": ["target_field_correct", "question_quality", "options_quality", "scene_option_purity"]
+  },
+  {
+    "id": "clarify_003",
+    "category": "clarification",
+    "description": "海边休息型旅行缺地点",
+    "tags": ["scene", "sea"],
+    "input": {"content": "最近很累，想找个能看海发呆几天的地方。"},
+    "session_state": {
+      "status": "askingScene",
+      "target_field": "scene",
+      "current_requirement": {
+        "mood": {"content": "放空、修复", "score": 3},
+        "scene": {"content": "", "score": 0},
+        "focus": {"content": "看海、发呆、住几天", "score": 4},
+        "scene_candidates": []
+      }
+    },
+    "expected": {"target_field": "scene", "option_count_min": 2, "option_count_max": 4},
+    "rubric": ["target_field_correct", "question_quality", "options_quality", "scene_option_purity"]
+  },
+  {
+    "id": "clarify_004",
+    "category": "clarification",
+    "description": "已有多个地点候选，scene 应使用候选直接提问",
+    "tags": ["scene", "candidate"],
+    "input": {"content": "想追寻村上春树小说里的城市气味。"},
+    "session_state": {
+      "status": "askingScene",
+      "target_field": "scene",
+      "current_requirement": {
+        "mood": {"content": "都市、孤独、节制", "score": 3},
+        "scene": {"content": "", "score": 2},
+        "focus": {"content": "散步、观察、写作", "score": 4},
+        "scene_candidates": ["东京神保町", "神户旧居留地"]
+      }
+    },
+    "expected": {"target_field": "scene", "option_count_min": 2, "option_count_max": 4, "content_must_include": ["东京神保町", "神户旧居留地"]},
+    "rubric": ["target_field_correct", "question_quality", "options_quality", "scene_option_purity"]
+  },
+  {
+    "id": "clarify_005",
+    "category": "clarification",
+    "description": "已有地点和行动，但氛围不明，应追问 mood",
+    "tags": ["mood"],
+    "input": {"content": "想去波尔图的老港口城区散步看旧房子。"},
+    "session_state": {
+      "status": "askingMood",
+      "target_field": "mood",
+      "current_requirement": {
+        "mood": {"content": "", "score": 0},
+        "scene": {"content": "葡萄牙波尔图里贝拉河岸区", "score": 4},
+        "focus": {"content": "散步、看旧房子", "score": 4},
+        "scene_candidates": []
+      }
+    },
+    "expected": {"target_field": "mood", "option_count_min": 2, "option_count_max": 4},
+    "rubric": ["target_field_correct", "question_quality", "options_quality"]
+  },
+  {
+    "id": "clarify_006",
+    "category": "clarification",
+    "description": "自然场景明确但情绪未成形",
+    "tags": ["mood", "nature"],
+    "input": {"content": "我想去一条峡谷里走一走，最好能待到傍晚。"},
+    "session_state": {
+      "status": "askingMood",
+      "target_field": "mood",
+      "current_requirement": {
+        "mood": {"content": "", "score": 1},
+        "scene": {"content": "峡谷步道区域", "score": 3},
+        "focus": {"content": "徒步、待到傍晚", "score": 4},
+        "scene_candidates": []
+      }
+    },
+    "expected": {"target_field": "mood", "option_count_min": 2, "option_count_max": 4},
+    "rubric": ["target_field_correct", "question_quality", "options_quality"]
+  },
+  {
+    "id": "clarify_007",
+    "category": "clarification",
+    "description": "文学地点明确但情感基调不清",
+    "tags": ["mood", "literary"],
+    "input": {"content": "想去巴黎作家待过的旧书街看看。"},
+    "session_state": {
+      "status": "askingMood",
+      "target_field": "mood",
+      "current_requirement": {
+        "mood": {"content": "", "score": 0},
+        "scene": {"content": "巴黎塞纳河左岸旧书摊与书店片区", "score": 4},
+        "focus": {"content": "旧书街漫游、找作家痕迹", "score": 4},
+        "scene_candidates": []
+      }
+    },
+    "expected": {"target_field": "mood", "option_count_min": 2, "option_count_max": 4},
+    "rubric": ["target_field_correct", "question_quality", "options_quality"]
+  },
+  {
+    "id": "clarify_008",
+    "category": "clarification",
+    "description": "地点和氛围明确，但行动不足，应追问 focus",
+    "tags": ["focus"],
+    "input": {"content": "我想去捷克克鲁姆洛夫老城区待一待，感受一点旧时光感，安静一点。"},
+    "session_state": {
+      "status": "askingFocus",
+      "target_field": "focus",
+      "current_requirement": {
+        "mood": {"content": "怀旧、安静", "score": 4},
+        "scene": {"content": "捷克克鲁姆洛夫老城区", "score": 4},
+        "focus": {"content": "", "score": 0},
+        "scene_candidates": []
+      }
+    },
+    "expected": {"target_field": "focus", "option_count_min": 2, "option_count_max": 4},
+    "rubric": ["target_field_correct", "question_quality", "options_quality"]
+  },
+  {
+    "id": "clarify_009",
+    "category": "clarification",
+    "description": "地点和情绪明确，但需要更具体行动",
+    "tags": ["focus", "history"],
+    "input": {"content": "想去平遥古城，感受一点旧时代气息。"},
+    "session_state": {
+      "status": "askingFocus",
+      "target_field": "focus",
+      "current_requirement": {
+        "mood": {"content": "旧时代、克制", "score": 4},
+        "scene": {"content": "平遥古城", "score": 4},
+        "focus": {"content": "", "score": 1},
+        "scene_candidates": []
+      }
+    },
+    "expected": {"target_field": "focus", "option_count_min": 2, "option_count_max": 4},
+    "rubric": ["target_field_correct", "question_quality", "options_quality"]
+  },
+  {
+    "id": "clarify_010",
+    "category": "clarification",
+    "description": "自然型旅行有地点与气质，但缺行为关注点",
+    "tags": ["focus", "nature"],
+    "input": {"content": "想去梅里雪山脚下的村落，心里很想安静下来。"},
+    "session_state": {
+      "status": "askingFocus",
+      "target_field": "focus",
+      "current_requirement": {
+        "mood": {"content": "安静、被自然压住", "score": 4},
+        "scene": {"content": "梅里雪山脚下村落", "score": 4},
+        "focus": {"content": "", "score": 1},
+        "scene_candidates": []
+      }
+    },
+    "expected": {"target_field": "focus", "option_count_min": 2, "option_count_max": 4},
+    "rubric": ["target_field_correct", "question_quality", "options_quality"]
+  },
+  {
+    "id": "clarify_011",
+    "category": "clarification",
+    "description": "多地点候选二次收敛",
+    "tags": ["scene", "candidate"],
+    "input": {"content": "我想沿着三毛的作品去追寻她生活过的痕迹。"},
+    "session_state": {
+      "status": "askingScene",
+      "target_field": "scene",
+      "current_requirement": {
+        "mood": {"content": "文学", "score": 4},
+        "scene": {"content": "", "score": 2},
+        "focus": {"content": "追寻作家的痕迹", "score": 4},
+        "scene_candidates": ["西班牙加纳利群岛", "台北", "撒哈拉沙漠"]
+      }
+    },
+    "expected": {"target_field": "scene", "option_count_min": 2, "option_count_max": 4, "content_must_include": ["西班牙加纳利群岛", "台北", "撒哈拉沙漠"]},
+    "rubric": ["target_field_correct", "question_quality", "options_quality", "scene_option_purity"]
+  },
+  {
+    "id": "clarify_012",
+    "category": "clarification",
+    "description": "围绕寺院和清晨空间的旅行，需澄清 focus",
+    "tags": ["focus", "spiritual"],
+    "input": {"content": "想去清迈素贴山寺院片区待一待，最好清晨就能开始。"},
+    "session_state": {
+      "status": "askingFocus",
+      "target_field": "focus",
+      "current_requirement": {
+        "mood": {"content": "清冷、沉静", "score": 4},
+        "scene": {"content": "清迈素贴山寺院片区", "score": 4},
+        "focus": {"content": "", "score": 0},
+        "scene_candidates": []
+      }
+    },
+    "expected": {"target_field": "focus", "option_count_min": 2, "option_count_max": 4},
+    "rubric": ["target_field_correct", "question_quality", "options_quality"]
+  }
+]
