@@ -1,0 +1,1139 @@
+{
+  "run_id": "20260324T073554_deepseek-chat",
+  "timestamp": "2026-03-24T07:35:54.021064Z",
+  "model": "deepseek-chat",
+  "base_url": "https://api.deepseek.com/v1/chat/completions",
+  "git_commit": "7011668",
+  "total_cases": 36,
+  "results": [
+    {
+      "case_id": "clarify_001",
+      "category": "clarification",
+      "description": "写作型旅行但地点缺失，应追问 scene",
+      "tags": [
+        "scene",
+        "writing"
+      ],
+      "expected": {
+        "target_field": "scene",
+        "option_count_min": 2,
+        "option_count_max": 4
+      },
+      "actual": {
+        "question": "为了帮你找到最契合写作灵感的散步环境，你更向往在哪种场景中漫步呢？",
+        "options": [
+          "江南水乡的古镇石板巷",
+          "海滨城市的宁静老街区",
+          "山林湖畔的徒步小径",
+          "高原古城的蜿蜒街巷"
+        ],
+        "target_field": "scene"
+      },
+      "assertions": [
+        {
+          "name": "target_field",
+          "passed": true,
+          "details": "actual=\"scene\" expected=\"scene\""
+        },
+        {
+          "name": "option_count_min",
+          "passed": true,
+          "details": "actual=4 expected\u003e=2"
+        },
+        {
+          "name": "option_count_max",
+          "passed": true,
+          "details": "actual=4 expected\u003c=4"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "clarify_002",
+      "category": "clarification",
+      "description": "历史感明确但地点缺失，应追问 scene",
+      "tags": [
+        "scene",
+        "history"
+      ],
+      "expected": {
+        "target_field": "scene",
+        "option_count_min": 2,
+        "option_count_max": 4
+      },
+      "actual": {
+        "question": "为了帮你找到最适合‘慢慢走、观察’的地方，你更向往哪一种场景呢？",
+        "options": [
+          "江南水乡的古镇巷弄与石桥",
+          "西北荒漠的古城遗迹与雅丹地貌",
+          "川滇交界处的雪山湖泊与森林草甸",
+          "胶东半岛的海岸岬角与渔村老屋"
+        ],
+        "target_field": "scene"
+      },
+      "assertions": [
+        {
+          "name": "target_field",
+          "passed": true,
+          "details": "actual=\"scene\" expected=\"scene\""
+        },
+        {
+          "name": "option_count_min",
+          "passed": true,
+          "details": "actual=4 expected\u003e=2"
+        },
+        {
+          "name": "option_count_max",
+          "passed": true,
+          "details": "actual=4 expected\u003c=4"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "clarify_003",
+      "category": "clarification",
+      "description": "海边休息型旅行缺地点",
+      "tags": [
+        "scene",
+        "sea"
+      ],
+      "expected": {
+        "target_field": "scene",
+        "option_count_min": 2,
+        "option_count_max": 4
+      },
+      "actual": {
+        "question": "为了帮你找到最契合心境的看海发呆地，我们不妨先聊聊，你更向往哪一种海边的场景呢？",
+        "options": [
+          "宁静的渔村或海岛，如福建平潭、浙江枸杞岛",
+          "拥有漫长沙滩的度假小镇，如海南万宁、山东威海",
+          "可以俯瞰海湾的山崖或半岛，如大连金石滩、青岛崂山",
+          "毗邻文艺街区的城市海岸，如厦门环岛路、珠海情侣路"
+        ],
+        "target_field": "scene"
+      },
+      "assertions": [
+        {
+          "name": "target_field",
+          "passed": true,
+          "details": "actual=\"scene\" expected=\"scene\""
+        },
+        {
+          "name": "option_count_min",
+          "passed": true,
+          "details": "actual=4 expected\u003e=2"
+        },
+        {
+          "name": "option_count_max",
+          "passed": true,
+          "details": "actual=4 expected\u003c=4"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "clarify_004",
+      "category": "clarification",
+      "description": "已有多个地点候选，scene 应使用候选直接提问",
+      "tags": [
+        "scene",
+        "candidate"
+      ],
+      "expected": {
+        "target_field": "scene",
+        "option_count_min": 2,
+        "option_count_max": 4,
+        "content_must_include": [
+          "东京神保町",
+          "神户旧居留地"
+        ]
+      },
+      "actual": {
+        "question": "这次旅行更想先落到哪个地方？先选一个方向，我再继续把它写具体。",
+        "options": [
+          "东京神保町",
+          "神户旧居留地"
+        ],
+        "target_field": "scene"
+      },
+      "assertions": [
+        {
+          "name": "target_field",
+          "passed": true,
+          "details": "actual=\"scene\" expected=\"scene\""
+        },
+        {
+          "name": "option_count_min",
+          "passed": true,
+          "details": "actual=2 expected\u003e=2"
+        },
+        {
+          "name": "option_count_max",
+          "passed": true,
+          "details": "actual=2 expected\u003c=4"
+        },
+        {
+          "name": "content_must_include",
+          "passed": true,
+          "details": "needle=\"东京神保町\""
+        },
+        {
+          "name": "content_must_include",
+          "passed": true,
+          "details": "needle=\"神户旧居留地\""
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "clarify_005",
+      "category": "clarification",
+      "description": "已有地点和行动，但氛围不明，应追问 mood",
+      "tags": [
+        "mood"
+      ],
+      "expected": {
+        "target_field": "mood",
+        "option_count_min": 2,
+        "option_count_max": 4
+      },
+      "actual": {
+        "question": "在里贝拉河岸的旧房子间散步时，你希望内心感受到怎样的情绪或氛围呢？",
+        "options": [
+          "怀旧而宁静的时光沉淀感",
+          "轻盈且充满诗意的偶然邂逅",
+          "略带忧郁的浪漫主义沉思",
+          "明快而好奇的探索者心境"
+        ],
+        "target_field": "mood"
+      },
+      "assertions": [
+        {
+          "name": "target_field",
+          "passed": true,
+          "details": "actual=\"mood\" expected=\"mood\""
+        },
+        {
+          "name": "option_count_min",
+          "passed": true,
+          "details": "actual=4 expected\u003e=2"
+        },
+        {
+          "name": "option_count_max",
+          "passed": true,
+          "details": "actual=4 expected\u003c=4"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "clarify_006",
+      "category": "clarification",
+      "description": "自然场景明确但情绪未成形",
+      "tags": [
+        "mood",
+        "nature"
+      ],
+      "expected": {
+        "target_field": "mood",
+        "option_count_min": 2,
+        "option_count_max": 4
+      },
+      "actual": {
+        "question": "在峡谷步道待到傍晚的徒步时光里，你希望内心感受到怎样的情绪氛围或文学气质呢？",
+        "options": [
+          "孤寂而壮阔的天地对话",
+          "沉静中带着治愈的疗愈感",
+          "充满冒险精神的探索激情",
+          "时光沉淀下的历史哲思"
+        ],
+        "target_field": "mood"
+      },
+      "assertions": [
+        {
+          "name": "target_field",
+          "passed": true,
+          "details": "actual=\"mood\" expected=\"mood\""
+        },
+        {
+          "name": "option_count_min",
+          "passed": true,
+          "details": "actual=4 expected\u003e=2"
+        },
+        {
+          "name": "option_count_max",
+          "passed": true,
+          "details": "actual=4 expected\u003c=4"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "clarify_007",
+      "category": "clarification",
+      "description": "文学地点明确但情感基调不清",
+      "tags": [
+        "mood",
+        "literary"
+      ],
+      "expected": {
+        "target_field": "mood",
+        "option_count_min": 2,
+        "option_count_max": 4
+      },
+      "actual": {
+        "question": "为了帮你策划一场更有共鸣的文学漫步，你希望这次塞纳河左岸的旧书之旅，整体沉浸于一种怎样的情绪或氛围之中呢？",
+        "options": [
+          "怀旧而宁静的午后沉思",
+          "充满惊喜与发现的探险感",
+          "疏离而忧郁的文人气质",
+          "轻盈浪漫的随性邂逅"
+        ],
+        "target_field": "mood"
+      },
+      "assertions": [
+        {
+          "name": "target_field",
+          "passed": true,
+          "details": "actual=\"mood\" expected=\"mood\""
+        },
+        {
+          "name": "option_count_min",
+          "passed": true,
+          "details": "actual=4 expected\u003e=2"
+        },
+        {
+          "name": "option_count_max",
+          "passed": true,
+          "details": "actual=4 expected\u003c=4"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "clarify_008",
+      "category": "clarification",
+      "description": "地点和氛围明确，但行动不足，应追问 focus",
+      "tags": [
+        "focus"
+      ],
+      "expected": {
+        "target_field": "focus",
+        "option_count_min": 2,
+        "option_count_max": 4
+      },
+      "actual": {
+        "question": "为了帮您策划一次更贴近内心的文学漫步，您更希望这次旅程围绕怎样的具体体验展开呢？",
+        "options": [
+          "在清晨石板路上聆听小镇苏醒的声音",
+          "寻找散落在街角的古老铭文与徽章",
+          "坐在河畔咖啡馆观察光影与行人",
+          "跟随某位作家的足迹探访灵感角落"
+        ],
+        "target_field": "focus"
+      },
+      "assertions": [
+        {
+          "name": "target_field",
+          "passed": true,
+          "details": "actual=\"focus\" expected=\"focus\""
+        },
+        {
+          "name": "option_count_min",
+          "passed": true,
+          "details": "actual=4 expected\u003e=2"
+        },
+        {
+          "name": "option_count_max",
+          "passed": true,
+          "details": "actual=4 expected\u003c=4"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "clarify_009",
+      "category": "clarification",
+      "description": "地点和情绪明确，但需要更具体行动",
+      "tags": [
+        "focus",
+        "history"
+      ],
+      "expected": {
+        "target_field": "focus",
+        "option_count_min": 2,
+        "option_count_max": 4
+      },
+      "actual": {
+        "question": "为了更贴合您心中那份旧时代的、克制的旅行感受，您更希望在平遥古城里，通过哪种具体的方式去沉浸和体验呢？",
+        "options": [
+          "在清晨无人的街巷中安静漫步",
+          "寻找并触摸古城墙的砖石纹理",
+          "于老字号票号内聆听历史回响",
+          "在传统院落里观察光影的移动"
+        ],
+        "target_field": "focus"
+      },
+      "assertions": [
+        {
+          "name": "target_field",
+          "passed": true,
+          "details": "actual=\"focus\" expected=\"focus\""
+        },
+        {
+          "name": "option_count_min",
+          "passed": true,
+          "details": "actual=4 expected\u003e=2"
+        },
+        {
+          "name": "option_count_max",
+          "passed": true,
+          "details": "actual=4 expected\u003c=4"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "clarify_010",
+      "category": "clarification",
+      "description": "自然型旅行有地点与气质，但缺行为关注点",
+      "tags": [
+        "focus",
+        "nature"
+      ],
+      "expected": {
+        "target_field": "focus",
+        "option_count_min": 2,
+        "option_count_max": 4
+      },
+      "actual": {
+        "question": "为了让这次梅里雪山脚下的旅程更贴近你的内心，我们不妨先聚焦于一个核心的体验。你更期待在这次旅行中，通过怎样的具体方式去感受这片土地呢？",
+        "options": [
+          "在清晨跟随本地向导进行短途徒步",
+          "在客栈露台安静地观察雪山光影变化",
+          "学习用简单工具制作一件传统手工艺品",
+          "记录村落中的自然声响与日常对话"
+        ],
+        "target_field": "focus"
+      },
+      "assertions": [
+        {
+          "name": "target_field",
+          "passed": true,
+          "details": "actual=\"focus\" expected=\"focus\""
+        },
+        {
+          "name": "option_count_min",
+          "passed": true,
+          "details": "actual=4 expected\u003e=2"
+        },
+        {
+          "name": "option_count_max",
+          "passed": true,
+          "details": "actual=4 expected\u003c=4"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "clarify_011",
+      "category": "clarification",
+      "description": "多地点候选二次收敛",
+      "tags": [
+        "scene",
+        "candidate"
+      ],
+      "expected": {
+        "target_field": "scene",
+        "option_count_min": 2,
+        "option_count_max": 4,
+        "content_must_include": [
+          "西班牙加纳利群岛",
+          "台北",
+          "撒哈拉沙漠"
+        ]
+      },
+      "actual": {
+        "question": "这次旅行更想先落到哪个地方？先选一个方向，我再继续把它写具体。",
+        "options": [
+          "西班牙加纳利群岛",
+          "台北",
+          "撒哈拉沙漠"
+        ],
+        "target_field": "scene"
+      },
+      "assertions": [
+        {
+          "name": "target_field",
+          "passed": true,
+          "details": "actual=\"scene\" expected=\"scene\""
+        },
+        {
+          "name": "option_count_min",
+          "passed": true,
+          "details": "actual=3 expected\u003e=2"
+        },
+        {
+          "name": "option_count_max",
+          "passed": true,
+          "details": "actual=3 expected\u003c=4"
+        },
+        {
+          "name": "content_must_include",
+          "passed": true,
+          "details": "needle=\"西班牙加纳利群岛\""
+        },
+        {
+          "name": "content_must_include",
+          "passed": true,
+          "details": "needle=\"台北\""
+        },
+        {
+          "name": "content_must_include",
+          "passed": true,
+          "details": "needle=\"撒哈拉沙漠\""
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "clarify_012",
+      "category": "clarification",
+      "description": "围绕寺院和清晨空间的旅行，需澄清 focus",
+      "tags": [
+        "focus",
+        "spiritual"
+      ],
+      "expected": {
+        "target_field": "focus",
+        "option_count_min": 2,
+        "option_count_max": 4
+      },
+      "actual": {
+        "question": "为了帮你规划一次更贴合心意的文学之旅，我们不妨先聚焦于这次清迈素贴山寺院之行中，你最想沉浸于怎样的具体体验或感官时刻呢？",
+        "options": [
+          "在晨雾中静听僧侣诵经",
+          "于佛塔前抄写一段经文",
+          "寻找寺院角落的光影与寂静",
+          "感受香火与古老木材的气息"
+        ],
+        "target_field": "focus"
+      },
+      "assertions": [
+        {
+          "name": "target_field",
+          "passed": true,
+          "details": "actual=\"focus\" expected=\"focus\""
+        },
+        {
+          "name": "option_count_min",
+          "passed": true,
+          "details": "actual=4 expected\u003e=2"
+        },
+        {
+          "name": "option_count_max",
+          "passed": true,
+          "details": "actual=4 expected\u003c=4"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "inspiration_001",
+      "category": "inspiration",
+      "description": "围绕神保町生成文学旧书街灵感",
+      "tags": [
+        "literary",
+        "writer"
+      ],
+      "expected": {
+        "content_must_include": [
+          "神保町"
+        ],
+        "single_core_place_required": true
+      },
+      "actual": {
+        "content": "东京神保町：在旧书街的寂静中与文学相遇\n\n在东京千代田区的神保町旧书街，时间以纸张和铅字的形式缓慢沉淀。这里不仅是全球最大的旧书聚集地，更是一座由无数作家与读者共同构建的文学迷宫。一次漫游，便是在字句的缝隙间，追寻那些已然消逝又无处不在的创作灵魂。\n\n秋日午后，阳光斜照在靖国通与白山通的交叉路口，空气里浮动着旧纸张特有的干燥气息。从矢口书店的木质楼梯走上二楼，在堆满昭和初期文学杂志的书架前驻足，指尖拂过略微卷曲的书页边缘，那里或许残留着某个无名读者或潦草作家的体温。转进小巷，推开一诚堂书店厚重的玻璃门，内部光线昏黄而静谧，在专门陈列日本近代文学的区域，可以轻易找到谷崎润一郎初版的《春琴抄》或川端康成的《雪国》，书脊上的烫金虽已黯淡，却仿佛封存着那个时代的呼吸。这种寻找本身，就是一种安静的对话。\n\n神保町的魔力，在于它并非单纯的文物陈列馆，而是文学生命延续的现场。在三省堂书店附近的小径穿行，能看见一些招牌古旧的咖啡馆，比如“さぼうる”或“ラドリオ”。在这些地方，要一杯深烘的咖啡，坐在靠窗的老位置，摊开刚淘到的、页边写满铅笔批注的旧书。窗外是匆匆而过的学生与研究者，窗内是跨越数十年的文字与思绪。芥川龙之介、永井荷风等文豪都曾是此地的常客，他们的身影早已融入砖瓦与墨香。此刻，在笔尖与稿纸轻微的摩擦声中，过去的创作痕迹与当下的书写冲动，在这片被书籍包围的街区里，达成了某种克制的共鸣。"
+      },
+      "assertions": [
+        {
+          "name": "content_must_include",
+          "passed": true,
+          "details": "needle=\"神保町\""
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "inspiration_002",
+      "category": "inspiration",
+      "description": "围绕小樽港口旧城区生成怀旧旅行灵感",
+      "tags": [
+        "literary",
+        "port"
+      ],
+      "expected": {
+        "content_must_include": [
+          "小樽"
+        ],
+        "single_core_place_required": true
+      },
+      "actual": {
+        "content": "小樽运河的旧时光\n\n在北海道小樽运河的仓库群间，一次夜行与静坐，便能触碰到明治大正时代海港贸易的旧影。清冷的空气与柔和的灯光交织，将工业遗迹沉淀为一种可供凝视的、带着距离感的宁静。\n\n小樽运河开凿于大正十二年，曾是北海道拓荒期吞吐煤炭与鲱鱼的核心动脉。运河两岸由红砖或石砌的仓库群，是那个蒸汽与雄心年代的沉默见证。如今机械的轰鸣早已消散，只留下这些坚固的轮廓倒映在墨色的水面上。选择一个冬夜，从浅草桥出发，沿着运河西岸向北漫步。积雪覆盖着仓库的斜顶，煤气灯的光晕是昏黄的，一团一团，在清冽的空气中化开，将人影拉得很长。脚步声在空旷的岸边显得清晰，仿佛能听见时光自身流淌的细微声响。仓库立面的砖石粗粝而真实，巨大的铁制门窗紧闭，上面或许还保留着旧时商号的铭牌，一切都在低声讲述关于运输、财富与离散的往事。\n\n走到色内十字路口附近，可以转入一栋由旧仓库改造的咖啡馆。推开门，暖意与咖啡香扑面而来。内部往往保留着原有的木梁结构，灯光柔和。找一个靠窗的位置坐下，窗外是静默的运河与对岸的灯火。可以要一杯热红茶，展开笔记本。笔尖划过纸页的沙沙声，与室内低徊的爵士乐、偶尔传来的杯碟轻碰声融为一体。在这里书写，并非创作宏篇，而是记录那些由清冷空气与旧砖墙所引发的、细微的思绪褶皱。光线在稿纸上投下温柔的阴影，思绪便顺着运河的水流，缓缓回溯，与百年前在此停泊又远航的无数人生，达成片刻寂静的共鸣。直到夜色更深，起身离开，运河重归静谧，方才的书写时光，便成了从旧日长河里打捞起的一枚温润的私人印记。"
+      },
+      "assertions": [
+        {
+          "name": "content_must_include",
+          "passed": true,
+          "details": "needle=\"小樽\""
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "inspiration_003",
+      "category": "inspiration",
+      "description": "围绕京都东山清晨生成寺院片区灵感",
+      "tags": [
+        "literary",
+        "spiritual"
+      ],
+      "expected": {
+        "content_must_include": [
+          "东山"
+        ],
+        "single_core_place_required": true
+      },
+      "actual": {
+        "content": "东山晨阶\n\n在京都东山寺院片区的清晨，一次关于时间与寂静的行走。核心是步履与目光对古老石阶的丈量，以及在寺院山门外的短暂驻留，于清冷空气中捕捉一种克制的、向内沉潜的旅思。\n\n东山，京都东部连绵的丘陵地带，自平安时代起便是寺院与贵族别庄的聚集之所，沉淀了千年王朝文化的精魂。其间的石阶，是连接世俗与圣域、此刻与往昔的实体路径，被无数足迹磨去了棱角，浸润了晨露与夕照。建议在春秋季的清晨六时许，从八坂神社后方的小径开始，经高台寺坡道，向清水寺方向缓步上行。这个时刻，游客未至，只有扫洒的僧人、偶尔的本地居民与自身为伴。空气清冽，光线是尚未炽白的青灰色，最适合进行一场沉静的观察。\n\n行动的关键在于“看”石阶。目光应落在脚下：观察石板上深浅不一的色泽，那是不同年代修补的痕迹；辨认被鞋履磨出的光滑凹陷，想象数百年来参拜者、茶人、武士与诗人曾在此拾级而上。在石阶转折处，常有老枫或古松，枝干虬结，与石阶构成一幅凝固的构图。步履需慢，让呼吸与步调同步，脚步声在寂静中清晰可闻，成为一种与空间对话的节奏。行至某处寺院的山门外，例如法观寺（八坂塔）紧闭的朱门前，或产宁坂（三年坂）某段僻静的阶梯顶端，便可停留。不必急于进入，而是站在门外。视线越过门扉，向内窥见一角庭院、一盏石灯笼、一地苔藓；转身向外，则可俯瞰晨雾中尚未完全苏醒的京都街巷，屋瓦连绵，远山如黛。这种“在门外”的姿势，是一种有意的间离，既靠近了神圣与古老的核心，又保持了一份沉静的旁观。呼吸间是清冷的空气，混合着泥土与隐约的线香气味，思绪可以飘远，亦可全然放空，只感受此刻石阶的冰凉透过鞋底，与目光所及的沉静景象。整个体验，便是在这克制的行走与停留中，让东山千年的重量，以一种不喧嚣的方式，缓缓注入当下的瞬间。"
+      },
+      "assertions": [
+        {
+          "name": "content_must_include",
+          "passed": true,
+          "details": "needle=\"东山\""
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "inspiration_004",
+      "category": "inspiration",
+      "description": "围绕神户旧居留地生成异国旧时光灵感",
+      "tags": [
+        "literary",
+        "history"
+      ],
+      "expected": {
+        "content_must_include": [
+          "神户"
+        ],
+        "single_core_place_required": true
+      },
+      "actual": {
+        "content": "神户旧居留地的黄昏札记\n\n在神户旧居留地，于傍晚时分漫步，观察明治时代遗留的西式建筑立面，在节制的安静中感受异国的旧时光，并以札记捕捉心绪的流动。这片区域是明治开埠后外国商人的聚居地，红砖与石材构筑的洋馆，历经关东大地震与战火，依然保留着十九世纪末的殖民风格轮廓，沉默地诉说着神户作为早期国际港口的记忆。\n\n初秋傍晚五时三刻，从旧居留地十五番馆开始向东行走。空气微凉，光线正从蜂蜜色转向淡紫。脚步应落在砖石人行道上，发出轻微而清晰的回响。视线需长久地停留在建筑立面的细节：生野矿业事务所山墙上繁复的砖砌图案，莱茵馆拱窗边缘被岁月磨钝的石雕茛苕叶，以及美国领事馆旧址那面在暮色中愈发沉郁的暗红色砖墙。建筑是凝固的时光，其沉默的庄严感，要求观看者也保持同等的静默与专注。\n\n散步的路径应规划至风见鸡之馆前的广场。此时路灯尚未亮起，但建筑内部的暖黄灯光已从高窗透出，在渐深的蓝灰色天幕下，勾勒出陡峭的屋顶与标志性的风信鸡剪影。这里适合长久驻足。从手提布袋中取出硬皮笔记本和铅笔，不必坐下，就倚靠着广场边的铸铁灯柱记录。文字应像建筑线条一样克制：记下光线在砖石凹槽里的移动，记下远处港口隐约传来的汽笛声如何与近处树叶的窸窣声交织，记下这异国旧影所唤起的、一种无关乡愁的遥远宁静。笔尖的沙沙声，是此刻唯一被允许的、与历史对话的私语。当最后一缕天光隐没于六甲山后，合上笔记本，散步可止于北野坂附近的某条斜坡小道，带着被旧时光抚慰过的、清明的安静离去。"
+      },
+      "assertions": [
+        {
+          "name": "content_must_include",
+          "passed": true,
+          "details": "needle=\"神户\""
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "inspiration_005",
+      "category": "inspiration",
+      "description": "围绕敦煌生成历史人文旅行灵感",
+      "tags": [
+        "history"
+      ],
+      "expected": {
+        "content_must_include": [
+          "敦煌"
+        ],
+        "single_core_place_required": true
+      },
+      "actual": {
+        "content": "敦煌：戈壁黄昏与壁画通道\n\n在敦煌莫高窟的洞窟与城郊戈壁之间，一次行走连接了人类精神的瑰丽殿堂与天地洪荒的原始场域，于壁画线条与落日风沙中，捕捉历史通道的辽阔回声。\n\n莫高窟，位于敦煌市东南二十五公里鸣沙山东麓的断崖上，始建于前秦，历经千年营建，现存七百余洞窟，是一部镌刻在岩壁上的中古文明史。其壁画与彩塑，承载了从十六国至元代的佛教艺术、社会风貌与东西方文化交流的印记。建议在秋季前往，气候干爽，光线澄澈。午后进入莫高窟南区，择一描绘《张骞出使西域图》或《五百强盗成佛图》的洞窟静观。目光需长久停留于斑驳的色块与流畅的衣褶线条，那些朱砂与石青虽已黯淡，但飞天飘带的动势与商旅驼队的轮廓，仍在幽暗洞窟中传递着昔日的熙攘与信仰的热忱。重点不在浏览数量，而在深度凝视一两幅叙事壁画，让视觉穿透颜料层，想象画工在烛火下的呼吸，以及丝路上僧侣、使节、工匠在此驻足时，于壁上投射的相同目光。\n\n关键在于黄昏时分的转换。应在闭窟前半小时离开，驱车西行，前往莫高窟以北、直线距离约八公里的戈壁边缘，具体可定位至敦煌市与莫高窟之间的空旷地带，一处能远眺三危山轮廓的所在。此时，夕阳正以近乎平行的角度照射无垠的砾石荒原。下车，向戈壁深处步行数百米，直至人声彻底消弭，只有风声与自己的脚步碾过碎石的声响。回首东望，莫高窟所在的崖壁在渐暗的天光中化为一道深色的剪影，而脚下延伸至天际的戈壁，在夕阳最后一抹金红中仿佛熔化的铜海。此地正是古代丝绸之路通道的直观体现：前望是沙州（敦煌古称）的绿洲与庇护所，后顾是令人敬畏的死亡之海。这种“通道感”并非抽象概念，而是身体立于旷野时，对方向、生存与孤绝的切身度量。风掠过耳畔，或许与千年前载着经卷、丝绸与思想的旅人所闻并无二致。伫立于此，白日所见的壁画场景——那些穿越沙碛的商队、求法的僧侣——瞬间获得了地理与情感上的锚点。艺术于洞窟中凝结历史，而荒野以它的辽阔与沉寂，释放了那段历史中蕴含的全部勇气、苍凉与向往。当最后的天光收尽，星辰自戈壁夜空浮现，这趟从人文杰作到自然洪荒的短途跋涉，便完成了一次对“通道”意义从视觉到心灵的全景式理解。"
+      },
+      "assertions": [
+        {
+          "name": "content_must_include",
+          "passed": true,
+          "details": "needle=\"敦煌\""
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "inspiration_006",
+      "category": "inspiration",
+      "description": "围绕平遥古城生成旧时代街巷体验",
+      "tags": [
+        "history"
+      ],
+      "expected": {
+        "content_must_include": [
+          "平遥"
+        ],
+        "single_core_place_required": true
+      },
+      "actual": {
+        "content": "城墙下的晨光与旧影\n\n在平遥古城，沿着明代城墙的砖石步道行走，于清晨无人时分探访票号旧址的幽深院落，是一次与旧时代金融脉搏及市井呼吸的沉静对话。这座保存完好的明清县城，其城墙、街巷与建筑共同构成了中国古代城市与商业文明的鲜活标本。\n\n黎明前，天色是蟹壳青。从凤仪门登上城墙，脚下的方砖被岁月磨出了温润的凹痕。顺着雉堞的指引向东行走，整座古城在脚下缓缓铺开，青灰色的屋脊如凝固的波浪。行至城墙东北角，可俯瞰城隍庙与文庙那片肃穆的琉璃顶，晨光最先染亮它们的飞檐。城墙的行走，是一种居高临下的阅读，阅读这座“龟城”严谨的骨骼与肌理。下城墙，步入西大街。日升昌票号旧址的门庭尚沉浸在阴影里，那面“汇通天下”的匾额沉默着。跨过极高的门槛，院落一进深似一进，狭窄而高耸，是晋商谨慎与雄心的建筑化身。在账房内，光线从高窗斜射而入，尘埃在光柱中浮沉，仿佛能听见算盘珠子的轻响与银锭碰撞的闷声，那是一个庞大金融帝国最细微的呼吸。\n\n真正的沉静属于清晨六七点的南大街。店铺的木板门还未卸下，石板路被夜露沁得颜色深润，泛着清冷的光。在“市楼”脚下停留，这座古城中心的明代楼阁，在无人的此刻才完全显露其秀挺的姿态。巷弄深处，偶尔有早起者推着自行车经过，车轮碾过石板的声响清脆而孤单，旋即又被巨大的寂静吸收。空气里有煤烟熄灭后的微呛，混合着老木头淡淡的霉味，这是属于旧平遥的、克制的气息。站在这样的街心，仿佛站在时间的缝隙里，前朝的繁华与算计都已沉降为砖瓦间的苔藓与光影，只剩下一种庞大结构在时间中缓慢呼吸的沉静质感，敦实，恒久，令人心安。"
+      },
+      "assertions": [
+        {
+          "name": "content_must_include",
+          "passed": true,
+          "details": "needle=\"平遥\""
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "inspiration_007",
+      "category": "inspiration",
+      "description": "围绕长安旧都气质生成历史灵感",
+      "tags": [
+        "history",
+        "poetry"
+      ],
+      "expected": {
+        "content_must_include": [
+          "西安"
+        ],
+        "single_core_place_required": true
+      },
+      "actual": {
+        "content": "长安诗墙：在砖石与墨痕间与盛唐相遇\n这是一次沿着西安古城墙与碑林展开的文学朝圣，在砖石的厚重与碑刻的锋芒里，触摸一个王朝的诗歌筋骨与精神气象。\n\n西安城墙，这座现存规模最大、保存最完整的古代城垣，其明代砖石之下，叠压着唐长安皇城的根基。建议在秋日午后，从南门永宁门登上城墙，向西而行。脚下是宽十余米的坦荡马道，身侧是绵延的垛口与敌楼，视野极为宏阔。向南望去，是现代都市的天际线；向北俯瞰，碑林博物馆的青灰色庑殿顶静伏于古城墙的阴影之中，那里封存着汉唐以来的书法原石。行走本身便成为一种史诗性的度量，每一步都仿佛踩在时间的纵剖面上。当夕阳将城砖染成金褐色，城墙巨大的轮廓在天地间展开，宛如一册正在缓缓合拢的、用土木写就的史书。\n\n走下城墙，穿过文昌门，便进入碑林的场域。这里不仅是书法圣地，更是唐代诗歌以最庄重形式被镌刻的殿堂。在第七展室，颜真卿、柳公权等书写的诗篇碑石林立。无需刻意寻找某位诗人，目光所及，杜甫的沉郁、王维的空灵、李白的奔放，皆透过千年不变的刀锋与石质，撞击着观者的心灵。可以在一方《石台孝经》碑或《开成石经》前长久驻足，看光线透过古老殿宇的窗棂，在拓片未及的碑阴处投下明明灭灭的光斑。那一刻，诵读的不仅是诗句，更是诗句被赋予的永恒形态——诗歌与书法，两种最辉煌的盛唐艺术，在此凝结为石，完成了从时间之流中打捞意义的壮举。城墙的物理尺度与碑林的精神刻度相互映照，共同构建了一个可漫步、可触摸、可凝视的“唐诗空间”，让那些曾经飘散在长安城空气中的诗意，有了确凿可循的坐标与沉甸甸的重量。"
+      },
+      "assertions": [
+        {
+          "name": "content_must_include",
+          "passed": true,
+          "details": "needle=\"西安\""
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "inspiration_008",
+      "category": "inspiration",
+      "description": "围绕梅里雪山脚下村落生成自然灵感",
+      "tags": [
+        "nature"
+      ],
+      "expected": {
+        "content_must_include": [
+          "梅里雪山"
+        ],
+        "single_core_place_required": true
+      },
+      "actual": {
+        "content": "雪山晨谒\n\n在梅里雪山脚下的村落，一次缓慢的行走与凝视，足以让心灵在自然的绝对尺度前归于沉静与敬畏。这并非寻常的游览，而是一场与光、与山、与时间的静默对话。\n\n梅里雪山，藏语称为“卡瓦格博”，是藏传佛教的朝圣圣地，其主峰至今仍是未被人类登顶的“处女峰”，这赋予了它超越地理的神圣与神秘色彩。山脚下的村落如雨崩、雾浓顶、飞来寺，散落在海拔三千米以上的河谷与台地，是朝圣者与旅人仰望神山的起点。选择深秋或初冬的清晨，寒气清冽，空气透明度极高。在飞来寺观景台，或更深入一些，在雾浓顶村某处无名的缓坡上驻足。天光未启，群峰是天地间浓墨的剪影，沉默地切割着深蓝色的苍穹。等待。第一缕光并非来自太阳，而是来自雪山本身——极高处的雪巅悄然泛起一丝清冷的银白，如同被自身内部的光源微微点亮。随后，这光开始流淌，缓慢地，以肉眼几乎无法察觉的速度向下浸润，为嶙峋的山脊镀上淡金，将幽暗的沟壑染出暖色。光与影的界限在山体上庄严移动，每一秒的构图都在坍缩与重建。\n\n此时应离开观景的人群，沿着村后的小径向山谷方向缓慢步行。脚下的碎石与枯草发出细微声响，更反衬出四野的阒寂。停下，回望。庞大的山体占据整个视野，其压迫感并非来自蛮横，而是来自一种亘古的、圆满的、自在的“存在”。风过经幡的猎猎声，远处溪流的淙淙声，都成了这巨大静默的一部分。呼吸不由自主地放缓，思绪停滞，只余下纯粹的“看”。看光如何一寸一寸唤醒沉睡的巨岩，看云如何从山腰生发、聚散。这不是征服或欣赏，而是被接纳、被审视。在这被山与光全然压住的时刻，人得以从自身的渺小中，窥见某种与永恒相关的秩序，内心翻腾的尘埃渐渐落定，只剩下对造化最原始的敬畏。当阳光终于铺满山谷，照亮炊烟袅袅的村落，那被震撼过的灵魂，已携带了一片雪山的寂静归来。"
+      },
+      "assertions": [
+        {
+          "name": "content_must_include",
+          "passed": true,
+          "details": "needle=\"梅里雪山\""
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "inspiration_009",
+      "category": "inspiration",
+      "description": "围绕虎跳峡高路步道生成自然徒步灵感",
+      "tags": [
+        "nature"
+      ],
+      "expected": {
+        "content_must_include": [
+          "虎跳峡"
+        ],
+        "single_core_place_required": true
+      },
+      "actual": {
+        "content": "虎跳峡的暮色与清醒\n\n当夕阳开始为玉龙雪山与哈巴雪山的岩壁镀上金红，虎跳峡高路步道上一天的徒步正接近尾声。这是一段与轰鸣江水并行、在绝壁间寻找内心寂静的旅程，核心的体验在于傍晚时分，行走于纳西雅阁至中途客栈这段路径，专注地聆听金沙江的怒吼，并凝视光线在千仞岩壁上上演的色彩戏剧。\n\n虎跳峡位于云南省迪庆藏族自治州香格里拉市虎跳峡镇与丽江市玉龙纳西族自治县大具乡之间，以险峻闻名。其高路步道是徒步者贴山而行的经典路线。建议在秋季前往，此时天气稳定，山色层次最为丰富。下午四时后从纳西雅阁附近出发，向中途客栈方向行走。脚步需踩稳碎石小径，身侧即是令人目眩的深谷。行动的关键在于停顿。找一处开阔的弯道，比如临近“二十八道拐”顶端的那几处平台，安全地驻足。此刻，听觉先于视觉被唤醒：下方数百米处，金沙江水挣脱束缚的咆哮，并非单一的巨响，而是混合了撞击、回旋、粉碎与奔流的复合声浪，厚重而持续，具有清洗耳膜与思绪的物理力量。\n\n与此同时，视觉开始捕捉光线魔法。西沉的太阳角度越来越低，对岸玉龙雪山灰白色的石灰岩壁，先是染上温暖的淡金色，继而转为浓烈的赭石与橙红，仿佛山体本身在燃烧。阴影从峡谷底部向上攀爬，冷峻的钢蓝色逐渐吞噬暖色，形成清晰的、流动的分界线。岩石的纹理、褶皱与裂缝在侧光下被极致放大，呈现出地质史诗般的肌理。这个过程持续约一小时，光线每分每秒都在变化，色彩从辉煌过渡到沉静。徒步者只需静立观看，江水声是永恒的底色，岩壁是变幻的幕布，在宏大的自然力与精确的光影计时中，一种被彻底震慑后的清醒感油然而生——那并非思维的清醒，而是感官被全然打开、个体暂时消融于天地壮阔秩序中的纯粹觉知。"
+      },
+      "assertions": [
+        {
+          "name": "content_must_include",
+          "passed": true,
+          "details": "needle=\"虎跳峡\""
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "inspiration_010",
+      "category": "inspiration",
+      "description": "围绕小樽港口片区生成修复型旅行灵感",
+      "tags": [
+        "nature",
+        "sea"
+      ],
+      "expected": {
+        "content_must_include": [
+          "小樽"
+        ],
+        "single_core_place_required": true
+      },
+      "actual": {
+        "content": "潮汐的慰藉：在小樽港畔放空与修复\n\n在北海道小樽的港口片区，潮汐的节奏成为修复心灵的良方。这里没有匆忙的行程，只有日复一日的潮涨潮落、傍晚时分的柔和散步，以及一段完全属于自己的、缓慢流淌的时光。\n\n小樽港，这座曾以鲱鱼捕捞和贸易繁盛一时的北方港口，如今褪去了往昔的喧嚣，只留下宁静的海面、沉默的防波堤与红砖仓库。潮水是这里真正的主人。选择在春末夏初的五月到访，海风已褪去凛冽，带着湿润的柔和。可以住在运河区靠港一侧的旧式旅馆，房间的窗户正对着港湾。每日无需刻意安排，最大的功课便是观察潮水。清晨，海水是饱满的湛蓝，几乎要漫过堤岸下的石阶；午后，它悄然退去，露出一片湿漉漉的、闪着光的黑色滩涂与系泊缆绳的旧木桩；到了傍晚，潮水又带着不容置疑的耐心，一寸寸地重新覆盖一切。这种恒定而温柔的往复，本身便是一种巨大的抚慰。\n\n核心的行动是傍晚的散步。从旅馆出发，沿着色内大通朝港口方向慢行，经过静默的旧银行建筑，在日没前抵达小樽港北防波堤。这是一条向海中延伸的平缓长堤，灯塔矗立在尽头。此时，西天的云彩被染成淡金与粉紫，光线不再具有侵略性，而是均匀地洒在波光粼粼的海面与泊岸的渔船船舷上。潮水正在上涨，能听见它轻轻拍打混凝土堤岸的“哗——哗——”声，规律而低沉，如同大地缓慢的呼吸。就在这里停下，不必思考，只是看光线的变幻，看海鸥盘旋着归巢，感受带着咸味的风拂过面颊。直到天色完全转为深邃的蓝，港口的灯火次第亮起，倒映在如绸缎般波动的水面上，方才循着来路慢慢返回。几日如此，日常的焦虑与疲惫，便仿佛被这潮汐一遍遍冲刷、带走，内心重获一种被自然韵律校准后的平和与清晰。"
+      },
+      "assertions": [
+        {
+          "name": "content_must_include",
+          "passed": true,
+          "details": "needle=\"小樽\""
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "inspiration_011",
+      "category": "inspiration",
+      "description": "围绕汪曾祺气质生成故乡空间灵感",
+      "tags": [
+        "writer",
+        "literary"
+      ],
+      "expected": {
+        "content_must_include": [
+          "高邮"
+        ],
+        "single_core_place_required": true
+      },
+      "actual": {
+        "content": "高邮旧巷里的日常诗学\n\n在江苏高邮老城，时间以另一种密度流淌。这里没有宏大的叙事，只有被作家汪曾祺细细描摹过的、温润如水的市井生活。一次理想的探访，便是潜入那些旧街巷，用一顿慢饭的工夫，去拾取散落在青石板与烟火气里的文学日常感。\n\n高邮老城片区，尤以大淖河边及与之相连的竺家巷、人民路一带为核，仍保留着旧时水乡格局。这里是汪曾祺文学世界的原点，他的许多小说散文，背景皆源于此。午后，从熙攘的人民路转入竺家巷，喧嚣骤然沉降。巷子窄而深，两侧是斑驳的粉墙与木门，偶有老人坐在门墩上闲谈。脚步放慢，目光掠过墙头探出的瓦松与晾晒的衣物，便能想象汪曾祺少年时代穿行其间的身影。他笔下“空气里带着湿润的草木清气”，在此处依然可感。\n\n循着巷子往西，不知不觉便临近大淖河。河边旧码头石阶参差，泊着几条旧船。汪曾祺在《大淖记事》中描绘的挑夫、锡匠生活与河岸风光，其地理脉络于此清晰可辨。傍晚时分，最适合在河边找一家老饭馆坐下。不必是名店，只需挑那些桌椅油亮、灶火正旺的小馆。点一碟汪曾祺屡屡提及的咸鸭蛋，蛋白柔嫩，蛋黄红亮流油，再配一碗清爽的阳春面。就着窗外渐沉的暮色与缓缓流淌的河水，慢慢吃完。这顿饭的滋味，便是连接当下与文学记忆最实在的纽带——作家反复书写并怀念的，正是这般朴素而安稳的日常之味。穿巷、临河、吃饭，这些细碎动作串联起的，并非猎奇，而是一种沉浸式的体认，在寻常街景与食物里，触碰到了一个地方最绵长深情的脉搏。"
+      },
+      "assertions": [
+        {
+          "name": "content_must_include",
+          "passed": true,
+          "details": "needle=\"高邮\""
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "inspiration_012",
+      "category": "inspiration",
+      "description": "围绕鲁迅旧居周边生成作家痕迹灵感",
+      "tags": [
+        "writer",
+        "literary"
+      ],
+      "expected": {
+        "content_must_include": [
+          "绍兴"
+        ],
+        "single_core_place_required": true
+      },
+      "actual": {
+        "content": "绍兴旧影：于鲁迅故里寻访民国初年的清醒\n\n在绍兴鲁迅故里，穿行于旧巷与台门之间，并非为了怀旧的感伤，而是进行一场冷静的勘察，试图触摸一个时代转折点上具体而微的生活肌理与精神胎记。这片位于绍兴市越城区鲁迅中路的街区，以鲁迅祖居、鲁迅故居、三味书屋及周家新台门为核心，保存着清末民初绍兴台门建筑的密集群落。鲁迅在此度过童年与少年时代，其笔下的风物人情，多源于此间砖瓦与河流的滋养。\n\n行动应从秋日午后开始，天色最好是青灰的，带着江南水乡特有的潮润与清寂。由鲁迅故居所在的周家新台门走出，不必急于进入纪念馆，应先转入故居东侧那条狭窄的弄堂。脚下的石板被岁月磨出了幽暗的光泽，两侧是高耸的封火墙，仰头只见一线天光。这种被建筑挤压的视觉经验，与鲁迅作品中那种沉郁的生存空间感隐隐相通。随后，应沿着故居背后的咸亨河埠头行走。河水是浑浊的绿，缓慢流淌，岸边系着数只乌篷船的骨架。在此停留，看对岸连绵的瓦楞和斑驳的墙面倒映水中，水波晃动间，仿佛旧日绍兴的日常图景在眼前拆解又重组。鲁迅多次描写过这样的水边场景，它既是市井生活的舞台，也是其观察世态人情的窗口。\n\n重点须放在三味书屋。这间位于鲁迅故居东侧约两百米处的私塾，格局狭小而严肃。应在游客散尽的黄昏时分进入，室内光线已然昏暗，只能勉强辨认出正中“三味书屋”匾额下那幅松鹿图，以及东北角那张鲁迅曾刻下“早”字的书桌。木桌表面的漆色早已剥落，露出木纹，那一道著名的刻痕其实浅淡得几乎难以辨认。这种需要凝神细察才得见的痕迹，比任何鲜明的标识都更具真实感。它不诉诸激昂的情绪，只沉默地指向一种童年时期即已萌生的、关于秩序与时间的个人训诫。最后，从三味书屋后园的小门走出，那里有一方小小的天井，墙角生着青苔，与鲁迅在《从百草园到三味书屋》中描述的枯燥与有限的趣味，依然严丝合缝。整个行走的节奏应是缓慢而专注的，目光所及，是潮湿的墙根、幽深的明堂、以及水面上静止的船影，所有这些细节共同构成了一种清醒的、去除了浪漫想象的旧社会质感，让人在具体的物与景中，领会一个文学世界得以诞生的、那坚硬而真实的基底。"
+      },
+      "assertions": [
+        {
+          "name": "content_must_include",
+          "passed": true,
+          "details": "needle=\"绍兴\""
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "intent_001",
+      "category": "intent",
+      "description": "明确想去敦煌感受历史现场",
+      "tags": [
+        "travel",
+        "history"
+      ],
+      "expected": {
+        "travel_related": true
+      },
+      "actual": {
+        "travel_related": true,
+        "raw_response": "{\"travel_related\": true}"
+      },
+      "assertions": [
+        {
+          "name": "travel_related",
+          "passed": true,
+          "details": "actual=true expected=true"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "intent_002",
+      "category": "intent",
+      "description": "以海边散步和住几天为目标的旅行请求",
+      "tags": [
+        "travel",
+        "sea"
+      ],
+      "expected": {
+        "travel_related": true
+      },
+      "actual": {
+        "travel_related": true,
+        "raw_response": "{\"travel_related\": true}"
+      },
+      "assertions": [
+        {
+          "name": "travel_related",
+          "passed": true,
+          "details": "actual=true expected=true"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "intent_003",
+      "category": "intent",
+      "description": "明确想做写作旅行",
+      "tags": [
+        "travel",
+        "writing"
+      ],
+      "expected": {
+        "travel_related": true
+      },
+      "actual": {
+        "travel_related": true,
+        "raw_response": "{\"travel_related\": true}"
+      },
+      "assertions": [
+        {
+          "name": "travel_related",
+          "passed": true,
+          "details": "actual=true expected=true"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "intent_004",
+      "category": "intent",
+      "description": "围绕作家足迹的旅行意图",
+      "tags": [
+        "travel",
+        "literary"
+      ],
+      "expected": {
+        "travel_related": true
+      },
+      "actual": {
+        "travel_related": true,
+        "raw_response": "{\"travel_related\": true}"
+      },
+      "assertions": [
+        {
+          "name": "travel_related",
+          "passed": true,
+          "details": "actual=true expected=true"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "intent_005",
+      "category": "intent",
+      "description": "纯文学概念解释",
+      "tags": [
+        "non_travel",
+        "literary"
+      ],
+      "expected": {
+        "travel_related": false
+      },
+      "actual": {
+        "travel_related": false,
+        "raw_response": "{\"travel_related\": false}"
+      },
+      "assertions": [
+        {
+          "name": "travel_related",
+          "passed": true,
+          "details": "actual=false expected=false"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "intent_006",
+      "category": "intent",
+      "description": "围绕作家的纯作品讨论",
+      "tags": [
+        "non_travel",
+        "literary"
+      ],
+      "expected": {
+        "travel_related": false
+      },
+      "actual": {
+        "travel_related": false,
+        "raw_response": "{\"travel_related\": false}"
+      },
+      "assertions": [
+        {
+          "name": "travel_related",
+          "passed": true,
+          "details": "actual=false expected=false"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "intent_007",
+      "category": "intent",
+      "description": "情绪倾诉，不包含出行目标",
+      "tags": [
+        "non_travel",
+        "emotion"
+      ],
+      "expected": {
+        "travel_related": false
+      },
+      "actual": {
+        "travel_related": false,
+        "raw_response": "{\"travel_related\": false}"
+      },
+      "assertions": [
+        {
+          "name": "travel_related",
+          "passed": true,
+          "details": "actual=false expected=false"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "intent_008",
+      "category": "intent",
+      "description": "写作任务，不要求出行体验",
+      "tags": [
+        "non_travel",
+        "writing_task"
+      ],
+      "expected": {
+        "travel_related": false
+      },
+      "actual": {
+        "travel_related": false,
+        "raw_response": "{\"travel_related\": false}"
+      },
+      "assertions": [
+        {
+          "name": "travel_related",
+          "passed": true,
+          "details": "actual=false expected=false"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "intent_009",
+      "category": "intent",
+      "description": "文学意味强但目标是去某地体验",
+      "tags": [
+        "travel",
+        "boundary"
+      ],
+      "expected": {
+        "travel_related": true
+      },
+      "actual": {
+        "travel_related": true,
+        "raw_response": "{\"travel_related\": true}"
+      },
+      "assertions": [
+        {
+          "name": "travel_related",
+          "passed": true,
+          "details": "actual=true expected=true"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "intent_010",
+      "category": "intent",
+      "description": "电影触发的旅行灵感",
+      "tags": [
+        "travel",
+        "boundary"
+      ],
+      "expected": {
+        "travel_related": true
+      },
+      "actual": {
+        "travel_related": true,
+        "raw_response": "{\"travel_related\": true}"
+      },
+      "assertions": [
+        {
+          "name": "travel_related",
+          "passed": true,
+          "details": "actual=true expected=true"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "intent_011",
+      "category": "intent",
+      "description": "人文知识问答，没有在地体验目标",
+      "tags": [
+        "non_travel",
+        "knowledge"
+      ],
+      "expected": {
+        "travel_related": false
+      },
+      "actual": {
+        "travel_related": false,
+        "raw_response": "{\"travel_related\": false}"
+      },
+      "assertions": [
+        {
+          "name": "travel_related",
+          "passed": true,
+          "details": "actual=false expected=false"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "intent_012",
+      "category": "intent",
+      "description": "生活决策，不属于旅行灵感请求",
+      "tags": [
+        "non_travel",
+        "daily_life"
+      ],
+      "expected": {
+        "travel_related": false
+      },
+      "actual": {
+        "travel_related": false,
+        "raw_response": "{\"travel_related\": false}"
+      },
+      "assertions": [
+        {
+          "name": "travel_related",
+          "passed": true,
+          "details": "actual=false expected=false"
+        }
+      ],
+      "passed": true
+    }
+  ]
+}
