@@ -68,6 +68,23 @@ type InspirationActual struct {
 	Content string `json:"content,omitempty"`
 }
 
+type PromptEvalTrace struct {
+	RAGEnabled        bool              `json:"rag_enabled"`
+	RAGQuery          string            `json:"rag_query,omitempty"`
+	RAGDocumentTitles []string          `json:"rag_document_titles,omitempty"`
+	RAGDocuments      []EvalRAGDocument `json:"rag_documents,omitempty"`
+	RAGReferenceText  string            `json:"rag_reference_text,omitempty"`
+	Prompt            string            `json:"prompt,omitempty"`
+}
+
+type EvalRAGDocument struct {
+	Title   string  `json:"title,omitempty"`
+	Summary string  `json:"summary,omitempty"`
+	Source  string  `json:"source,omitempty"`
+	Query   string  `json:"query,omitempty"`
+	Score   float64 `json:"score,omitempty"`
+}
+
 type Assertion struct {
 	Name    string `json:"name"`
 	Passed  bool   `json:"passed"`
@@ -75,17 +92,18 @@ type Assertion struct {
 }
 
 type PromptEvalResult struct {
-	CaseID      string          `json:"case_id"`
-	Category    Category        `json:"category"`
-	Description string          `json:"description"`
-	Tags        []string        `json:"tags,omitempty"`
-	Expected    FixtureExpected `json:"expected"`
-	Actual      any             `json:"actual,omitempty"`
-	Assertions  []Assertion     `json:"assertions,omitempty"`
-	Passed      bool            `json:"passed"`
-	Error       string          `json:"error,omitempty"`
-	ManualScore map[string]any  `json:"manual_score,omitempty"`
-	ManualNotes string          `json:"manual_notes,omitempty"`
+	CaseID      string           `json:"case_id"`
+	Category    Category         `json:"category"`
+	Description string           `json:"description"`
+	Tags        []string         `json:"tags,omitempty"`
+	Expected    FixtureExpected  `json:"expected"`
+	Actual      any              `json:"actual,omitempty"`
+	Assertions  []Assertion      `json:"assertions,omitempty"`
+	Passed      bool             `json:"passed"`
+	Error       string           `json:"error,omitempty"`
+	Trace       *PromptEvalTrace `json:"trace,omitempty"`
+	ManualScore map[string]any   `json:"manual_score,omitempty"`
+	ManualNotes string           `json:"manual_notes,omitempty"`
 }
 
 type PromptEvalRun struct {
@@ -98,6 +116,22 @@ type PromptEvalRun struct {
 	SelectedCases []string           `json:"selected_cases,omitempty"`
 	TotalCases    int                `json:"total_cases"`
 	Results       []PromptEvalResult `json:"results"`
+}
+
+type InspirationABItem struct {
+	Input          string            `json:"input,omitempty"`
+	Query          string            `json:"query,omitempty"`
+	RAGDocuments   []EvalRAGDocument `json:"rag_documents,omitempty"`
+	RAGContext     string            `json:"rag_context,omitempty"`
+	BaselineOutput string            `json:"baseline_output,omitempty"`
+	RAGOutput      string            `json:"rag_output,omitempty"`
+	BaselineError  string            `json:"baseline_error,omitempty"`
+	RAGError       string            `json:"rag_error,omitempty"`
+}
+
+type InspirationABRun struct {
+	Label string              `json:"label,omitempty"`
+	Items []InspirationABItem `json:"items"`
 }
 
 type CompareCaseChange struct {

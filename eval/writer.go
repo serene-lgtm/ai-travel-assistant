@@ -25,6 +25,20 @@ func WriteRun(path string, run *PromptEvalRun) error {
 	return nil
 }
 
+func WriteInspirationABRun(path string, run *InspirationABRun) error {
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		return fmt.Errorf("mkdir output dir: %w", err)
+	}
+	data, err := json.MarshalIndent(run, "", "  ")
+	if err != nil {
+		return fmt.Errorf("marshal ab run: %w", err)
+	}
+	if err := os.WriteFile(path, data, 0o644); err != nil {
+		return fmt.Errorf("write ab run file: %w", err)
+	}
+	return nil
+}
+
 func ReadRun(path string) (*PromptEvalRun, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {

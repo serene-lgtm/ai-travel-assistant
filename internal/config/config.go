@@ -15,6 +15,7 @@ type Config struct {
 	Mongo     MongoConfig     `json:"mongo"`
 	Session   SessionConfig   `json:"session"`
 	Wikipedia WikipediaConfig `json:"wikipedia"`
+	RAG       RAGConfig       `json:"rag"`
 }
 
 type DeepseekConfig struct {
@@ -37,6 +38,12 @@ type WikipediaConfig struct {
 	Language  string `json:"language"`
 	UserAgent string `json:"user_agent"`
 	Proxy     string `json:"proxy"`
+}
+
+type RAGConfig struct {
+	Enabled         bool `json:"enabled"`
+	TopK            int  `json:"top_k"`
+	MaxContextChars int  `json:"max_context_chars"`
 }
 
 type TokenConfig struct {
@@ -136,6 +143,12 @@ func (cfg *Config) applyDefaults() {
 	if cfg.Wikipedia.Language == "" {
 		cfg.Wikipedia.Language = "zh"
 	}
+	if cfg.RAG.TopK <= 0 {
+		cfg.RAG.TopK = 3
+	}
+	if cfg.RAG.MaxContextChars <= 0 {
+		cfg.RAG.MaxContextChars = 2000
+	}
 }
 
 func (cfg *Config) validate() error {
@@ -153,6 +166,12 @@ func (cfg *Config) validate() error {
 	}
 	if cfg.Mongo.Timeout <= 0 {
 		return fmt.Errorf("config mongo.timeout must be > 0")
+	}
+	if cfg.RAG.TopK <= 0 {
+		return fmt.Errorf("config rag.top_k must be > 0")
+	}
+	if cfg.RAG.MaxContextChars <= 0 {
+		return fmt.Errorf("config rag.max_context_chars must be > 0")
 	}
 	return nil
 }

@@ -13,13 +13,17 @@ import (
 	"ai-reading-assistant/internal/config"
 	"ai-reading-assistant/internal/llm"
 	"ai-reading-assistant/internal/model"
+	"ai-reading-assistant/internal/wikipedia"
 )
 
 type Runner struct {
 	client             *llm.DeepseekClient
+	cfg                *config.Config
 	intentAgent        agent.IntentAgent
 	clarificationAgent agent.ClarificationAgent
 	inspirationAgent   agent.InspirationAgent
+	ragAgent           agent.RAGAgent
+	ragEnabled         bool
 	progress           func(index, total int, item PromptEvalCase)
 }
 
@@ -32,16 +36,24 @@ func NewRunner(root string) (*Runner, error) {
 	if err != nil {
 		return nil, err
 	}
+	wikipediaAgent := newWikipediaAgentFromConfig(cfg.Wikipedia)
 	return &Runner{
 		client:             client,
+		cfg:                cfg,
 		intentAgent:        agent.NewIntentAgent(client),
 		clarificationAgent: agent.NewClarificationAgent(client),
 		inspirationAgent:   agent.NewInspirationAgent(client),
+		ragAgent:           agent.NewRAGAgent(wikipediaAgent),
+		ragEnabled:         cfg.RAG.Enabled,
 	}, nil
 }
 
 func (r *Runner) SetProgressLogger(fn func(index, total int, item PromptEvalCase)) {
 	r.progress = fn
+}
+
+func (r *Runner) SetRAGEnabled(enabled bool) {
+	r.ragEnabled = enabled
 }
 
 func (r *Runner) Run(ctx context.Context, cases []PromptEvalCase, label string, selected []string) (*PromptEvalRun, error) {
@@ -78,7 +90,13 @@ func (r *Runner) Run(ctx context.Context, cases []PromptEvalCase, label string, 
 		if err != nil {
 			result.Error = err.Error()
 		} else {
-			result.Actual = actual
+			switch value := actual.(type) {
+			case inspirationRunOutput:
+				result.Actual = value.Actual
+				result.Trace = value.Trace
+			default:
+				result.Actual = actual
+			}
 		}
 		run.Results = append(run.Results, result)
 	}
@@ -120,14 +138,90 @@ func (r *Runner) runCase(ctx context.Context, item PromptEvalCase) (any, error) 
 		if err != nil {
 			return nil, err
 		}
-		content, err := r.inspirationAgent.Generate(ctx, session)
+		var ragContext *agent.RAGContext
+		if r.ragEnabled && r.ragAgent != nil {
+			ragContext, err = r.ragAgent.BuildContext(ctx, session)
+			if err != nil {
+				return nil, err
+			}
+		}
+		content, err := r.inspirationAgent.Generate(ctx, session, ragContext)
 		if err != nil {
 			return nil, err
 		}
-		return InspirationActual{Content: strings.TrimSpace(content)}, nil
+		trace, err := buildInspirationTrace(session, ragContext, r.ragEnabled)
+		if err != nil {
+			return nil, err
+		}
+		return inspirationRunOutput{
+			Actual: InspirationActual{Content: strings.TrimSpace(content)},
+			Trace:  trace,
+		}, nil
 	default:
 		return nil, fmt.Errorf("unsupported category %q", item.Category)
 	}
+}
+
+type inspirationRunOutput struct {
+	Actual InspirationActual
+	Trace  *PromptEvalTrace
+}
+
+func buildInspirationTrace(session *model.InspirationSession, ragContext *agent.RAGContext, ragEnabled bool) (*PromptEvalTrace, error) {
+	prompt, err := agent.BuildInspirationPrompt(session, ragContext)
+	if err != nil {
+		return nil, err
+	}
+
+	trace := &PromptEvalTrace{
+		RAGEnabled: ragEnabled,
+		Prompt:     prompt,
+	}
+	if ragEnabled {
+		trace.RAGQuery = strings.Join(agent.BuildRAGQueryPreview(session), " | ")
+	}
+	if ragContext == nil {
+		return trace, nil
+	}
+
+	if trace.RAGQuery == "" {
+		trace.RAGQuery = ragContext.Query
+	}
+	trace.RAGReferenceText = ragContext.ReferenceText
+	trace.RAGDocumentTitles = make([]string, 0, len(ragContext.Documents))
+	trace.RAGDocuments = make([]EvalRAGDocument, 0, len(ragContext.Documents))
+	for _, doc := range ragContext.Documents {
+		if title := strings.TrimSpace(doc.Title); title != "" {
+			trace.RAGDocumentTitles = append(trace.RAGDocumentTitles, title)
+		}
+		trace.RAGDocuments = append(trace.RAGDocuments, EvalRAGDocument{
+			Title:   strings.TrimSpace(doc.Title),
+			Summary: strings.TrimSpace(doc.Summary),
+			Source:  strings.TrimSpace(doc.Source),
+			Query:   strings.TrimSpace(doc.Query),
+			Score:   doc.Score,
+		})
+	}
+	return trace, nil
+}
+
+func newWikipediaAgentFromConfig(cfg config.WikipediaConfig) agent.WikipediaAgent {
+	opts := make([]wikipedia.Option, 0, 3)
+	if lang := strings.TrimSpace(cfg.Language); lang != "" {
+		opts = append(opts, wikipedia.WithLanguage(lang))
+	}
+	if proxy := strings.TrimSpace(cfg.Proxy); proxy != "" {
+		opts = append(opts, wikipedia.WithProxy(proxy))
+	}
+	if userAgent := strings.TrimSpace(cfg.UserAgent); userAgent != "" {
+		opts = append(opts, wikipedia.WithUserAgent(userAgent))
+	}
+
+	client, err := wikipedia.NewClient(opts...)
+	if err != nil {
+		return nil
+	}
+	return agent.NewWikipediaAgent(client)
 }
 
 func buildSession(item PromptEvalCase) (*model.InspirationSession, model.RequirementField, error) {

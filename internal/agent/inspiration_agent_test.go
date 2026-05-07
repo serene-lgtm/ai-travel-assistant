@@ -24,7 +24,7 @@ func TestInspirationAgentGenerateStripsMarkdown(t *testing.T) {
 		},
 	}
 
-	got, err := agent.Generate(t.Context(), session)
+	got, err := agent.Generate(t.Context(), session, nil)
 	if err != nil {
 		t.Fatalf("Generate error: %v", err)
 	}
@@ -47,5 +47,8 @@ func TestGenInspirationPromptRequiresPlainText(t *testing.T) {
 	}
 	if !strings.Contains(genInspirationPrompt, "哪位作家或作品与此地有关") {
 		t.Fatalf("expected prompt to require concrete literary traces, got %q", genInspirationPrompt)
+	}
+	if !strings.Contains(genInspirationPrompt, "参考资料") {
+		t.Fatalf("expected prompt to include reference section, got %q", genInspirationPrompt)
 	}
 }

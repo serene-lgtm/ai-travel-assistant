@@ -10,7 +10,7 @@ import (
 )
 
 type InspirationAgent interface {
-	Generate(ctx context.Context, session *model.InspirationSession) (string, error)
+	Generate(ctx context.Context, session *model.InspirationSession, ragContext *RAGContext) (string, error)
 }
 
 type inspirationAgent struct {
@@ -21,10 +21,22 @@ func NewInspirationAgent(client *llm.DeepseekClient) InspirationAgent {
 	return &inspirationAgent{llmClient: client}
 }
 
-func (a *inspirationAgent) Generate(_ context.Context, session *model.InspirationSession) (string, error) {
+func (a *inspirationAgent) Generate(_ context.Context, session *model.InspirationSession, ragContext *RAGContext) (string, error) {
 	if a.llmClient == nil {
 		return "", fmt.Errorf("inspiration agent llm client is not initialized")
 	}
+	prompt, err := BuildInspirationPrompt(session, ragContext)
+	if err != nil {
+		return "", err
+	}
+	resp, err := a.llmClient.Call(prompt)
+	if err != nil {
+		return "", fmt.Errorf("generate inspiration: %w", err)
+	}
+	return stripMarkdownToPlainText(resp), nil
+}
+
+func BuildInspirationPrompt(session *model.InspirationSession, ragContext *RAGContext) (string, error) {
 	if session == nil {
 		return "", fmt.Errorf("session is nil")
 	}
@@ -50,13 +62,16 @@ func (a *inspirationAgent) Generate(_ context.Context, session *model.Inspiratio
 		getContent(model.RequirementFieldMood),
 		getContent(model.RequirementFieldScene),
 		getContent(model.RequirementFieldFocus),
+		buildRAGPromptSection(ragContext),
 	)
+	return prompt, nil
+}
 
-	resp, err := a.llmClient.Call(prompt)
-	if err != nil {
-		return "", fmt.Errorf("generate inspiration: %w", err)
+func buildRAGPromptSection(ragContext *RAGContext) string {
+	if ragContext == nil || strings.TrimSpace(ragContext.ReferenceText) == "" {
+		return "无"
 	}
-	return stripMarkdownToPlainText(resp), nil
+	return ragContext.ReferenceText
 }
 
 const genInspirationPrompt = `
@@ -75,6 +90,8 @@ const genInspirationPrompt = `
 %s
 [核心关注点/行动]
 %s
+[参考资料]
+%s
 要求:
 1. 以中文输出,给这段文字起一个标题,并在第一段用1-3句话对内容进行简洁概括。
 2. 不要使用 markdown,不要输出标题符号、加粗符号、列表符号、代码块或链接格式,只输出纯文本。
@@ -85,6 +102,8 @@ const genInspirationPrompt = `
 7. 如果核心关注点涉及作家、作品或文学人物,在已确定地点的前提下补充该地点与其相关的生活痕迹、创作背景或文学联想。
 8. 如果用户在寻找作家生活痕迹、写作氛围或作品中的空间回声,请尽量具体说明: 哪位作家或作品与此地有关,曾在此发生过什么,当地哪些街区/旧居/书店/码头/路径仍能承接这种联系。
 9. 文学关联要服务于旅行落地,不要空泛堆砌典故;优先写可抵达、可观察、可停留的空间细节。
+10. 如果参考资料提供了地点背景或文学/历史关联,优先据此生成;如果参考资料不足或不确定,不要编造具体事实。
+11. 参考资料只用于增强地点背景、空间细节和关联依据,不要把成文写成百科摘要。
 `
 
 const RoleIteraryTripPlanner = `

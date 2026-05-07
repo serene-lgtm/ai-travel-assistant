@@ -82,6 +82,11 @@ func writeTestConfig(t *testing.T, apiKey string) string {
     "uri": "mongodb://admin:password@localhost:27017",
     "database": "travel_inspiration",
     "timeout": 10000000000
+  },
+  "rag": {
+    "enabled": false,
+    "top_k": 3,
+    "max_context_chars": 2000
   }
 }`
 
