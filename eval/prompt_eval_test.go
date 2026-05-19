@@ -27,6 +27,7 @@ func TestPromptEvalRun(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewRunner() error = %v", err)
 	}
+	runner.SetRAGEnabled(os.Getenv("PROMPT_EVAL_RAG") == "1")
 	runner.SetProgressLogger(func(index, total int, item PromptEvalCase) {
 		t.Logf("running case %d/%d: %s (%s)", index, total, item.ID, item.Category)
 	})
@@ -102,6 +103,62 @@ func TestPromptEvalCompare(t *testing.T) {
 	}
 }
 
+func TestPromptEvalInspirationAB(t *testing.T) {
+	cfg := struct {
+		Label         string
+		SelectedCases []string
+		OutputPath    string
+	}{
+		Label:         "ab_rag",
+		SelectedCases: nil,
+		OutputPath:    "",
+	}
+
+	root := repoRoot()
+	cases, err := LoadCases(root)
+	if err != nil {
+		t.Fatalf("LoadCases() error = %v", err)
+	}
+
+	cases = FilterCases(cases, cfg.SelectedCases)
+	cases = filterInspirationCases(cases)
+	if len(cases) == 0 {
+		t.Fatal("no inspiration cases selected")
+	}
+
+	run, err := RunInspirationAB(context.Background(), root, cases, cfg.Label, cfg.SelectedCases, func(index, total int, item PromptEvalCase) {
+		t.Logf("running case %d/%d: %s - %s", index, total, item.ID, item.Description)
+	})
+	if err != nil {
+		t.Fatalf("RunInspirationAB() error = %v", err)
+	}
+
+	outputPath := strings.TrimSpace(cfg.OutputPath)
+	if outputPath == "" {
+		outputPath = filepath.Join(root, "eval", "artifacts", "prompt_eval", "inspiration_ab.json")
+	}
+	if err := WriteInspirationABRun(outputPath, run); err != nil {
+		t.Fatalf("WriteInspirationABRun() error = %v", err)
+	}
+
+	t.Logf("inspiration A/B results written to %s", outputPath)
+	for _, item := range run.Items {
+		if item.Query != "" {
+			t.Logf("query=%s", item.Query)
+		}
+		if item.BaselineError != "" {
+			t.Logf("baseline_error=%s", item.BaselineError)
+		} else {
+			t.Logf("baseline=%s", item.BaselineOutput)
+		}
+		if item.RAGError != "" {
+			t.Logf("rag_error=%s", item.RAGError)
+		} else {
+			t.Logf("rag=%s", item.RAGOutput)
+		}
+	}
+}
+
 func splitCSV(value string) []string {
 	if strings.TrimSpace(value) == "" {
 		return nil
@@ -112,6 +169,16 @@ func splitCSV(value string) []string {
 		part = strings.TrimSpace(part)
 		if part != "" {
 			out = append(out, part)
+		}
+	}
+	return out
+}
+
+func filterInspirationCases(cases []PromptEvalCase) []PromptEvalCase {
+	out := make([]PromptEvalCase, 0, len(cases))
+	for _, item := range cases {
+		if item.Category == CategoryInspiration {
+			out = append(out, item)
 		}
 	}
 	return out

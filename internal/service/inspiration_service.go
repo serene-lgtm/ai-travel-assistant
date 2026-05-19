@@ -43,7 +43,9 @@ func NewInspirationService(client *llm.DeepseekClient, sessionDao dao.Inspiratio
 	clarificationAgent := agent.NewClarificationAgent(client)
 	inspirationAgent := agent.NewInspirationAgent(client)
 	keywordAgent := agent.NewKeywordAgent(client)
+	ragQueryAgent := agent.NewRAGQueryAgent(client)
 	wikipediaAgent := newWikipediaAgentFromConfig(config.Global().Wikipedia)
+	ragAgent := agent.NewRAGAgent(wikipediaAgent, ragQueryAgent)
 	return &inspirationServiceImpl{
 		llmClient:   client,
 		intentAgent: intentAgent,
@@ -60,6 +62,7 @@ func NewInspirationService(client *llm.DeepseekClient, sessionDao dao.Inspiratio
 			inspirationAgent,
 			keywordAgent,
 			wikipediaAgent,
+			ragAgent,
 		),
 	}
 }

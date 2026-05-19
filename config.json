@@ -1,6 +1,6 @@
 {
   "deepseek": {
-    "api_key": "偷api_key的替我挡灾",
+    "api_key": "偷api key的替我挡灾",
     "model": "deepseek-chat",
     "base_url": "https://api.deepseek.com/v1/chat/completions"
   },
@@ -15,6 +15,11 @@
   "wikipedia": {
     "language": "zh",
     "user_agent": "MyGolangDemo/1.0 (your@email.com)",
-    "proxy": "http://127.0.0.1:6789"
+    "proxy": "http://127.0.0.1:6268"
+  },
+  "rag": {
+    "enabled": true,
+    "max_wiki_docs": 3,
+    "max_context_chars": 2000
   }
 }

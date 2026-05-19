@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"ai-reading-assistant/internal/agent"
+	"ai-reading-assistant/internal/config"
 	"ai-reading-assistant/internal/dao"
 	"ai-reading-assistant/internal/dto/http_dto"
 	"ai-reading-assistant/internal/model"
@@ -26,6 +27,7 @@ type inspirationOrchestrator struct {
 	inspirationAgent   agent.InspirationAgent
 	keywordAgent       agent.KeywordAgent
 	wikipediaAgent     agent.WikipediaAgent
+	ragAgent           agent.RAGAgent
 }
 
 func NewInspirationOrchestrator(
@@ -38,6 +40,7 @@ func NewInspirationOrchestrator(
 	inspirationAgent agent.InspirationAgent,
 	keywordAgent agent.KeywordAgent,
 	wikipediaAgent agent.WikipediaAgent,
+	ragAgent agent.RAGAgent,
 ) InspirationOrchestrator {
 	return &inspirationOrchestrator{
 		sessionDao:         sessionDao,
@@ -49,6 +52,7 @@ func NewInspirationOrchestrator(
 		inspirationAgent:   inspirationAgent,
 		keywordAgent:       keywordAgent,
 		wikipediaAgent:     wikipediaAgent,
+		ragAgent:           ragAgent,
 	}
 }
 
@@ -232,7 +236,17 @@ func (o *inspirationOrchestrator) buildAssistantResponse(ctx context.Context, re
 		if err := o.setRequestStage(ctx, requestProcess, model.RequestStageGenerateInspiration); err != nil {
 			return nil, nil, fmt.Errorf("update process to generate inspiration: %w", err)
 		}
-		replyContent, err := o.inspirationAgent.Generate(ctx, session)
+
+		var ragContext *agent.RAGContext
+		var err error
+		if config.Global().RAG.Enabled && o.ragAgent != nil {
+			ragContext, err = o.ragAgent.BuildContext(ctx, session)
+			if err != nil {
+				return nil, nil, fmt.Errorf("build rag context: %w", err)
+			}
+		}
+
+		replyContent, err := o.inspirationAgent.Generate(ctx, session, ragContext)
 		if err != nil {
 			return nil, nil, fmt.Errorf("generate inspiration %w", err)
 		}
