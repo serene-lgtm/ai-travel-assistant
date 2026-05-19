@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func RunInspirationAB(ctx context.Context, root string, cases []PromptEvalCase, label string, selected []string) (*InspirationABRun, error) {
+func RunInspirationAB(ctx context.Context, root string, cases []PromptEvalCase, label string, selected []string, progress func(index, total int, item PromptEvalCase)) (*InspirationABRun, error) {
 	if len(cases) == 0 {
 		return nil, fmt.Errorf("no inspiration cases selected")
 	}
@@ -28,9 +28,14 @@ func RunInspirationAB(ctx context.Context, root string, cases []PromptEvalCase, 
 		Items: make([]InspirationABItem, 0, len(cases)),
 	}
 
-	for _, item := range cases {
+	for i, item := range cases {
+		if progress != nil {
+			progress(i+1, len(cases), item)
+		}
 		abItem := InspirationABItem{
-			Input: strings.TrimSpace(item.Input.Content),
+			CaseID:      strings.TrimSpace(item.ID),
+			Description: strings.TrimSpace(item.Description),
+			Input:       strings.TrimSpace(item.Input.Content),
 		}
 
 		baselineActual, baselineErr := baselineRunner.runCase(ctx, item)
@@ -68,11 +73,20 @@ func fillABSide(item *InspirationABItem, actual any, runErr error, rag bool) {
 		item.RAGOutput = strings.TrimSpace(output.Actual.Content)
 		if output.Trace != nil {
 			item.Query = strings.TrimSpace(output.Trace.RAGQuery)
+			item.RAGLookups = append([]EvalRAGLookup(nil), output.Trace.RAGLookups...)
 			item.RAGDocuments = append([]EvalRAGDocument(nil), output.Trace.RAGDocuments...)
 			item.RAGContext = strings.TrimSpace(output.Trace.RAGReferenceText)
+			item.RAGLatencyMs = output.Trace.TotalLatencyMs
+			item.RAGQueryLatencyMs = output.Trace.QueryLatencyMs
+			item.RAGWikiLatencyMs = output.Trace.WikiLatencyMs
+			item.RAGGenerationLatencyMs = output.Trace.GenerationLatencyMs
 		}
 		return
 	}
 
 	item.BaselineOutput = strings.TrimSpace(output.Actual.Content)
+	if output.Trace != nil {
+		item.BaselineLatencyMs = output.Trace.TotalLatencyMs
+		item.BaselineGenerationLatencyMs = output.Trace.GenerationLatencyMs
+	}
 }

@@ -85,7 +85,7 @@ func writeTestConfig(t *testing.T, apiKey string) string {
   },
   "rag": {
     "enabled": false,
-    "top_k": 3,
+    "max_wiki_docs": 3,
     "max_context_chars": 2000
   }
 }`

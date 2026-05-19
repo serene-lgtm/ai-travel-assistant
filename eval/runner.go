@@ -36,6 +36,7 @@ func NewRunner(root string) (*Runner, error) {
 	if err != nil {
 		return nil, err
 	}
+	ragQueryAgent := agent.NewRAGQueryAgent(client)
 	wikipediaAgent := newWikipediaAgentFromConfig(cfg.Wikipedia)
 	return &Runner{
 		client:             client,
@@ -43,7 +44,7 @@ func NewRunner(root string) (*Runner, error) {
 		intentAgent:        agent.NewIntentAgent(client),
 		clarificationAgent: agent.NewClarificationAgent(client),
 		inspirationAgent:   agent.NewInspirationAgent(client),
-		ragAgent:           agent.NewRAGAgent(wikipediaAgent),
+		ragAgent:           agent.NewRAGAgent(wikipediaAgent, ragQueryAgent),
 		ragEnabled:         cfg.RAG.Enabled,
 	}, nil
 }
@@ -138,6 +139,7 @@ func (r *Runner) runCase(ctx context.Context, item PromptEvalCase) (any, error) 
 		if err != nil {
 			return nil, err
 		}
+		totalStarted := time.Now()
 		var ragContext *agent.RAGContext
 		if r.ragEnabled && r.ragAgent != nil {
 			ragContext, err = r.ragAgent.BuildContext(ctx, session)
@@ -145,11 +147,13 @@ func (r *Runner) runCase(ctx context.Context, item PromptEvalCase) (any, error) 
 				return nil, err
 			}
 		}
+		generationStarted := time.Now()
 		content, err := r.inspirationAgent.Generate(ctx, session, ragContext)
+		generationLatencyMs := time.Since(generationStarted).Milliseconds()
 		if err != nil {
 			return nil, err
 		}
-		trace, err := buildInspirationTrace(session, ragContext, r.ragEnabled)
+		trace, err := buildInspirationTrace(session, ragContext, r.ragEnabled, time.Since(totalStarted).Milliseconds(), generationLatencyMs)
 		if err != nil {
 			return nil, err
 		}
@@ -167,18 +171,17 @@ type inspirationRunOutput struct {
 	Trace  *PromptEvalTrace
 }
 
-func buildInspirationTrace(session *model.InspirationSession, ragContext *agent.RAGContext, ragEnabled bool) (*PromptEvalTrace, error) {
+func buildInspirationTrace(session *model.InspirationSession, ragContext *agent.RAGContext, ragEnabled bool, totalLatencyMs int64, generationLatencyMs int64) (*PromptEvalTrace, error) {
 	prompt, err := agent.BuildInspirationPrompt(session, ragContext)
 	if err != nil {
 		return nil, err
 	}
 
 	trace := &PromptEvalTrace{
-		RAGEnabled: ragEnabled,
-		Prompt:     prompt,
-	}
-	if ragEnabled {
-		trace.RAGQuery = strings.Join(agent.BuildRAGQueryPreview(session), " | ")
+		RAGEnabled:          ragEnabled,
+		Prompt:              prompt,
+		TotalLatencyMs:      totalLatencyMs,
+		GenerationLatencyMs: generationLatencyMs,
 	}
 	if ragContext == nil {
 		return trace, nil
@@ -186,6 +189,18 @@ func buildInspirationTrace(session *model.InspirationSession, ragContext *agent.
 
 	if trace.RAGQuery == "" {
 		trace.RAGQuery = ragContext.Query
+	}
+	trace.QueryLatencyMs = ragContext.QueryLatencyMs
+	trace.WikiLatencyMs = ragContext.WikiLatencyMs
+	trace.RAGLookups = make([]EvalRAGLookup, 0, len(ragContext.Lookups))
+	for _, lookup := range ragContext.Lookups {
+		trace.RAGLookups = append(trace.RAGLookups, EvalRAGLookup{
+			Query:   strings.TrimSpace(lookup.Query),
+			Title:   strings.TrimSpace(lookup.Title),
+			Summary: strings.TrimSpace(lookup.Summary),
+			Source:  strings.TrimSpace(lookup.Source),
+			Hit:     lookup.Hit,
+		})
 	}
 	trace.RAGReferenceText = ragContext.ReferenceText
 	trace.RAGDocumentTitles = make([]string, 0, len(ragContext.Documents))

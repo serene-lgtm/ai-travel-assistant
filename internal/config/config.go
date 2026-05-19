@@ -42,7 +42,7 @@ type WikipediaConfig struct {
 
 type RAGConfig struct {
 	Enabled         bool `json:"enabled"`
-	TopK            int  `json:"top_k"`
+	MaxWikiDocs     int  `json:"max_wiki_docs"`
 	MaxContextChars int  `json:"max_context_chars"`
 }
 
@@ -143,8 +143,8 @@ func (cfg *Config) applyDefaults() {
 	if cfg.Wikipedia.Language == "" {
 		cfg.Wikipedia.Language = "zh"
 	}
-	if cfg.RAG.TopK <= 0 {
-		cfg.RAG.TopK = 3
+	if cfg.RAG.MaxWikiDocs <= 0 {
+		cfg.RAG.MaxWikiDocs = 3
 	}
 	if cfg.RAG.MaxContextChars <= 0 {
 		cfg.RAG.MaxContextChars = 2000
@@ -167,8 +167,8 @@ func (cfg *Config) validate() error {
 	if cfg.Mongo.Timeout <= 0 {
 		return fmt.Errorf("config mongo.timeout must be > 0")
 	}
-	if cfg.RAG.TopK <= 0 {
-		return fmt.Errorf("config rag.top_k must be > 0")
+	if cfg.RAG.MaxWikiDocs <= 0 {
+		return fmt.Errorf("config rag.max_wiki_docs must be > 0")
 	}
 	if cfg.RAG.MaxContextChars <= 0 {
 		return fmt.Errorf("config rag.max_context_chars must be > 0")

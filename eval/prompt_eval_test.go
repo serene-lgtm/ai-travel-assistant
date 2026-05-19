@@ -104,8 +104,14 @@ func TestPromptEvalCompare(t *testing.T) {
 }
 
 func TestPromptEvalInspirationAB(t *testing.T) {
-	if os.Getenv("PROMPT_EVAL_AB") != "1" {
-		t.Skip("set PROMPT_EVAL_AB=1 to run inspiration A/B prompt eval")
+	cfg := struct {
+		Label         string
+		SelectedCases []string
+		OutputPath    string
+	}{
+		Label:         "ab_rag",
+		SelectedCases: nil,
+		OutputPath:    "",
 	}
 
 	root := repoRoot()
@@ -114,20 +120,21 @@ func TestPromptEvalInspirationAB(t *testing.T) {
 		t.Fatalf("LoadCases() error = %v", err)
 	}
 
-	selectedCases := splitCSV(os.Getenv("PROMPT_EVAL_CASES"))
-	cases = FilterCases(cases, selectedCases)
+	cases = FilterCases(cases, cfg.SelectedCases)
 	cases = filterInspirationCases(cases)
 	if len(cases) == 0 {
 		t.Fatal("no inspiration cases selected")
 	}
 
-	run, err := RunInspirationAB(context.Background(), root, cases, os.Getenv("PROMPT_EVAL_LABEL"), selectedCases)
+	run, err := RunInspirationAB(context.Background(), root, cases, cfg.Label, cfg.SelectedCases, func(index, total int, item PromptEvalCase) {
+		t.Logf("running case %d/%d: %s - %s", index, total, item.ID, item.Description)
+	})
 	if err != nil {
 		t.Fatalf("RunInspirationAB() error = %v", err)
 	}
 
-	outputPath := os.Getenv("PROMPT_EVAL_OUTPUT")
-	if strings.TrimSpace(outputPath) == "" {
+	outputPath := strings.TrimSpace(cfg.OutputPath)
+	if outputPath == "" {
 		outputPath = filepath.Join(root, "eval", "artifacts", "prompt_eval", "inspiration_ab.json")
 	}
 	if err := WriteInspirationABRun(outputPath, run); err != nil {
