@@ -1,9 +1,0 @@
-./clarification_agent.go
-./helpers.go
-./inspiration_agent.go
-./intent_agent.go
-./keyword_agent.go
-./rag_agent.go
-./requirement_agent.go
-./requirement_shared.go
-./wikipedia_agent.go
